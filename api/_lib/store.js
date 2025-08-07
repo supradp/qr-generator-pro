@@ -40,6 +40,21 @@ async function createQR({ id = uuidv4(), original_url, qr_image, qr_image_png, q
   return data;
 }
 
+async function updateQR(id, patch) {
+  const redis = getRedis();
+  if (redis) {
+    await redis.hset(keyQR(id), patch);
+    const data = await redis.hgetall(keyQR(id));
+    return Object.keys(data).length ? { ...data, scan_count: Number(data.scan_count) } : null;
+  } else {
+    const existing = memory.qrs.get(id);
+    if (!existing) return null;
+    const next = { ...existing, ...patch };
+    memory.qrs.set(id, next);
+    return next;
+  }
+}
+
 async function getQR(id) {
   const redis = getRedis();
   if (redis) {
@@ -290,4 +305,5 @@ module.exports = {
   addScan,
   getStats,
   getGlobalStats,
+  updateQR,
 };

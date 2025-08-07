@@ -161,6 +161,10 @@ async function openStats(id){
     drawBarChart('chartUA', agg, 'Топ User-Agent');
     drawBarChart('chartCountriesQR', (data.breakdowns?.countries||[]), 'Страны');
     drawBarChart('chartDevicesQR', (data.breakdowns?.devices||[]), 'Устройства');
+    drawBarChart('chartOSQR', (data.breakdowns?.os||[]), 'ОС');
+    drawBarChart('chartBrowsersQR', (data.breakdowns?.browsers||[]), 'Браузеры');
+    drawBarChart('chartHoursQR', (data.breakdowns?.hours||[]), 'Часы');
+    drawBarChart('chartWeekdaysQR', (data.breakdowns?.weekdays||[]), 'Дни недели');
 
     const rows = (data.scans||[]).map(s=>`<tr>
       <td>${formatDate(s.scanned_at)}</td>
