@@ -27,7 +27,21 @@
     <section id="global" class="card fade-in">
       <div class="card-head">
         <h2>Общая статистика</h2>
-        <button id="refreshGlobal" class="btn btn-ghost"><i data-lucide="refresh-ccw"></i> Обновить</button>
+        <div>
+          <select id="period" class="btn">
+            <option value="7">7 дней</option>
+            <option value="30" selected>30 дней</option>
+            <option value="60">60 дней</option>
+            <option value="90">90 дней</option>
+          </select>
+          <select id="timezone" class="btn">
+            <option value="0">UTC</option>
+            <option value="180">Europe/Kiev (+3)</option>
+            <option value="120">Europe/Berlin (+2)</option>
+            <option value="-240">US/Eastern (-4)</option>
+          </select>
+          <button id="refreshGlobal" class="btn btn-ghost"><i data-lucide="refresh-ccw"></i> Обновить</button>
+        </div>
       </div>
       <div id="globalKpi" class="stats-meta"></div>
       <div class="charts">

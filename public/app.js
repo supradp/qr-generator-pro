@@ -64,6 +64,10 @@ document.addEventListener('DOMContentLoaded', () => {
   $('#refresh').addEventListener('click', loadList);
   $('#closeDetails').addEventListener('click', ()=> $('#details').classList.add('hidden'));
   $('#refreshGlobal').addEventListener('click', loadGlobal);
+  const periodSel = document.getElementById('period');
+  const tzSel = document.getElementById('timezone');
+  if (periodSel) periodSel.addEventListener('change', loadGlobal);
+  if (tzSel) tzSel.addEventListener('change', loadGlobal);
 
   loadGlobal();
   loadList();
@@ -138,7 +142,9 @@ async function openStats(id){
   $('#statsMeta').innerHTML = 'Загрузка…';
   $('#scanTable').innerHTML = '';
   try {
-    const data = await (await fetch(`/api/stats/${id}?days=60`)).json();
+    const days = Number(document.getElementById('period')?.value || 30);
+    const tz = Number(document.getElementById('timezone')?.value || 0);
+    const data = await (await fetch(`/api/stats/${id}?days=${days}&tz=${tz}`)).json();
     const meta = `
       <div class="pill"><strong>ID:</strong> ${data.id}</div>
       <div class="pill"><strong>Всего сканов:</strong> ${data.scan_count}</div>
@@ -178,8 +184,10 @@ function escapeHtml(str=''){
 
 // ====== Глобальная статистика ======
 async function loadGlobal(){
+  const days = Number(document.getElementById('period')?.value || 30);
+  const tz = Number(document.getElementById('timezone')?.value || 0);
   try{
-    const data = await (await fetch('/api/stats-global?days=60')).json();
+    const data = await (await fetch(`/api/stats-global?days=${days}&tz=${tz}`)).json();
     $('#globalKpi').innerHTML = `
       <div class="pill"><strong>QR всего:</strong> ${data.total_qrs}</div>
       <div class="pill"><strong>Сканы всего:</strong> ${data.total_scans}</div>

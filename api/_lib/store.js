@@ -152,20 +152,31 @@ async function addScan({ qr_id, user_agent, ip_address, country, region, city, r
   return scan;
 }
 
-function dateKeyFromISO(iso) {
-  try { return new Date(iso).toISOString().slice(0, 10); } catch { return ''; }
+function shiftDateByOffset(d, tzOffsetMinutes) {
+  if (!Number.isFinite(tzOffsetMinutes)) return d;
+  return new Date(d.getTime() - tzOffsetMinutes * 60000);
 }
 
-function buildDailySeries(scans, days = 30) {
+function dateKeyFromISO(iso, tzOffsetMinutes) {
+  try {
+    const d = new Date(iso);
+    const local = shiftDateByOffset(d, tzOffsetMinutes || 0);
+    return new Date(Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate()))
+      .toISOString().slice(0, 10);
+  } catch { return ''; }
+}
+
+function buildDailySeries(scans, days = 30, tzOffsetMinutes = 0) {
   const result = [];
   const map = new Map();
   for (const s of scans) {
-    const k = dateKeyFromISO(s.scanned_at);
+    const k = dateKeyFromISO(s.scanned_at, tzOffsetMinutes);
     map.set(k, (map.get(k) || 0) + 1);
   }
   const today = new Date();
   for (let i = days - 1; i >= 0; i--) {
-    const d = new Date(Date.UTC(today.getUTCFullYear(), today.getUTCMonth(), today.getUTCDate()));
+    const base = shiftDateByOffset(today, tzOffsetMinutes || 0);
+    const d = new Date(Date.UTC(base.getUTCFullYear(), base.getUTCMonth(), base.getUTCDate()));
     d.setUTCDate(d.getUTCDate() - i);
     const key = d.toISOString().slice(0, 10);
     result.push({ date: key, count: map.get(key) || 0 });
@@ -173,7 +184,7 @@ function buildDailySeries(scans, days = 30) {
   return result;
 }
 
-async function getStats(qr_id, { days = 30 } = {}) {
+async function getStats(qr_id, { days = 30, tzOffset = 0 } = {}) {
   const redis = getRedis();
   if (redis) {
     const qr = await getQR(qr_id);
@@ -181,20 +192,20 @@ async function getStats(qr_id, { days = 30 } = {}) {
     const raw = await redis.lrange(keyScans(qr_id), 0, -1);
     const scans = raw.map(s => JSON.parse(s));
     const unique_visitors = await redis.scard(keyUniques(qr_id));
-    const series_daily = buildDailySeries(scans, days);
-    const breakdowns = buildBreakdowns(scans);
+    const series_daily = buildDailySeries(scans, days, tzOffset);
+    const breakdowns = buildBreakdowns(scans, tzOffset);
     return { ...qr, unique_visitors, scans, series_daily, breakdowns };
   }
   const qr = memory.qrs.get(qr_id);
   if (!qr) return null;
   const scans = memory.scans.get(qr_id) || [];
   const unique_visitors = (memory.uniques.get(qr_id) || new Set()).size;
-  const series_daily = buildDailySeries(scans, days);
-  const breakdowns = buildBreakdowns(scans);
+  const series_daily = buildDailySeries(scans, days, tzOffset);
+  const breakdowns = buildBreakdowns(scans, tzOffset);
   return { ...qr, unique_visitors, scans, series_daily, breakdowns };
 }
 
-async function getGlobalStats({ days = 30 } = {}) {
+async function getGlobalStats({ days = 30, tzOffset = 0 } = {}) {
   const redis = getRedis();
   let qrs = [];
   let allScans = [];
@@ -224,7 +235,7 @@ async function getGlobalStats({ days = 30 } = {}) {
   const total_qrs = qrs.length;
   const total_scans = allScans.length;
   const total_unique_visitors = uniqueAll.size;
-  const series_daily = buildDailySeries(allScans, days);
+  const series_daily = buildDailySeries(allScans, days, tzOffset);
 
   // топ-5 QR по числу сканов
   const top_qrs = qrs
@@ -233,7 +244,7 @@ async function getGlobalStats({ days = 30 } = {}) {
     .slice(0, 5)
     .map(x => ({ id: x.id, scan_count: Number(x.scan_count || 0), original_url: x.original_url }));
 
-  const breakdowns = buildBreakdowns(allScans);
+  const breakdowns = buildBreakdowns(allScans, tzOffset);
 
   return { total_qrs, total_scans, total_unique_visitors, series_daily, top_qrs, breakdowns };
 }
@@ -248,17 +259,17 @@ function aggregateCounts(items, keyFn) {
     .sort((a, b) => b.value - a.value);
 }
 
-function buildBreakdowns(scans) {
+function buildBreakdowns(scans, tzOffsetMinutes = 0) {
   const byCountry = aggregateCounts(scans, s => (s.country || '').toUpperCase());
   const byCity = aggregateCounts(scans, s => s.city || '');
   const byDevice = aggregateCounts(scans, s => s.device_type || '');
   const byOS = aggregateCounts(scans, s => s.os || '');
   const byBrowser = aggregateCounts(scans, s => s.browser || '');
   const byHour = aggregateCounts(scans, s => {
-    try { return String(new Date(s.scanned_at).getHours()).padStart(2, '0'); } catch { return ''; }
+    try { const d = shiftDateByOffset(new Date(s.scanned_at), tzOffsetMinutes || 0); return String(d.getHours()).padStart(2, '0'); } catch { return ''; }
   });
   const byWeekday = aggregateCounts(scans, s => {
-    try { return ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'][new Date(s.scanned_at).getDay()]; } catch { return ''; }
+    try { const d = shiftDateByOffset(new Date(s.scanned_at), tzOffsetMinutes || 0); return ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'][d.getDay()]; } catch { return ''; }
   });
   return {
     countries: byCountry.slice(0, 10),
