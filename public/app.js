@@ -90,6 +90,7 @@ async function loadList(){
         const st = await (await fetch(`/api/stats/${x.id}`)).json();
         uniques = st.unique_visitors || 0;
       } catch {}
+      const svgHref = x.qr_image_svg ? `data:image/svg+xml;utf8,${encodeURIComponent(x.qr_image_svg)}` : '';
       return `<tr>
         <td><code>${x.id.slice(0,8)}</code></td>
         <td><a href="${x.original_url}" target="_blank">${escapeHtml(x.original_url)}</a></td>
@@ -99,7 +100,8 @@ async function loadList(){
         <td class="actions">
           <button class="btn btn-ghost" data-act="stats" data-id="${x.id}"><i data-lucide="bar-chart-3"></i> Статистика</button>
           <a class="btn btn-ghost" href="/redirect/${x.id}" target="_blank"><i data-lucide="link"></i> Открыть</a>
-          <a class="btn btn-ghost" href="${x.qr_image}" download="qr-${x.id}.png"><i data-lucide="download"></i> PNG</a>
+          <a class="btn btn-ghost" href="${x.qr_image_png || x.qr_image}" download="qr-${x.id}.png"><i data-lucide="download"></i> PNG</a>
+          ${x.qr_image_svg ? `<a class=\"btn btn-ghost\" href=\"${svgHref}\" download=\"qr-${x.id}.svg\"><i data-lucide=\"download\"></i> SVG</a>` : ''}
           <button class="btn btn-ghost" data-act="delete" data-id="${x.id}"><i data-lucide="trash-2"></i> Удалить</button>
         </td>
       </tr>`;
