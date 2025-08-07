@@ -1,0 +1,123 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>QR Generator Pro</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/public/styles.css" />
+  <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+  <script defer src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+  <script defer src="/public/app.js"></script>
+</head>
+<body>
+  <div class="bg-gradient"></div>
+  <header class="container header">
+    <h1 class="logo">QR Generator <span>Pro</span></h1>
+    <nav class="nav">
+      <a href="#create" class="nav-link">Создать</a>
+      <a href="#global" class="nav-link">Статистика</a>
+      <a href="#list" class="nav-link">Мои QR</a>
+    </nav>
+  </header>
+
+  <main class="container">
+    <section id="global" class="card fade-in">
+      <div class="card-head">
+        <h2>Общая статистика</h2>
+        <button id="refreshGlobal" class="btn btn-ghost"><i data-lucide="refresh-ccw"></i> Обновить</button>
+      </div>
+      <div id="globalKpi" class="stats-meta"></div>
+      <div class="charts">
+        <div class="chart-card"><canvas id="chartGlobalDaily"></canvas></div>
+        <div class="chart-card"><canvas id="chartTopQrs"></canvas></div>
+      </div>
+    </section>
+
+    <section id="create" class="card fade-in">
+      <h2>Создать новый QR-код</h2>
+      <form id="generateForm" class="form">
+        <div class="input-group">
+          <label for="url">URL</label>
+          <input id="url" name="url" type="url" placeholder="https://example.com" required>
+        </div>
+        <div class="switch-group">
+          <label class="switch">
+            <input type="checkbox" id="tracking" checked>
+            <span class="slider"></span>
+          </label>
+          <span>Отслеживание сканирований</span>
+        </div>
+        <button class="btn btn-gradient" type="submit">
+          <i data-lucide="qrcode"></i>
+          Сгенерировать
+        </button>
+      </form>
+
+      <div id="result" class="result hidden">
+        <img id="qrImage" alt="QR" />
+        <div class="result-info">
+          <p><strong>Короткая ссылка:</strong> <a id="shortUrl" href="#" target="_blank"></a></p>
+          <div class="actions">
+            <button id="copyLink" class="btn btn-ghost"><i data-lucide="copy"></i> Копировать ссылку</button>
+            <a id="downloadPng" class="btn btn-ghost" download="qr.png"><i data-lucide="download"></i> Скачать PNG</a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="list" class="card fade-in">
+      <div class="card-head">
+        <h2>Мои QR-коды</h2>
+        <button id="refresh" class="btn btn-ghost"><i data-lucide="refresh-ccw"></i> Обновить</button>
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>URL</th>
+              <th>Сканов</th>
+              <th>Уникальные</th>
+              <th>Статус</th>
+              <th>Действия</th>
+            </tr>
+          </thead>
+          <tbody id="qrTable"></tbody>
+        </table>
+      </div>
+    </section>
+
+    <section id="details" class="card fade-in hidden">
+      <div class="card-head">
+        <h2>Статистика</h2>
+        <button id="closeDetails" class="btn btn-ghost"><i data-lucide="x"></i> Закрыть</button>
+      </div>
+      <div id="statsMeta" class="stats-meta"></div>
+      <div class="charts">
+        <div class="chart-card"><canvas id="chartDaily"></canvas></div>
+        <div class="chart-card"><canvas id="chartUA"></canvas></div>
+      </div>
+      <div class="table-wrap">
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Время</th>
+              <th>User-Agent</th>
+              <th>IP</th>
+            </tr>
+          </thead>
+          <tbody id="scanTable"></tbody>
+        </table>
+      </div>
+    </section>
+  </main>
+
+  <div id="toast" class="toast hidden">
+    <i data-lucide="info"></i>
+    <span id="toastMsg"></span>
+  </div>
+</body>
+</html>
