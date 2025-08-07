@@ -33,7 +33,15 @@ app.get('/redirect/:qrId', async (req, res) => {
   const qr = await getQR(req.params.qrId);
   if (!qr) return res.status(404).send('QR not found');
   if (String(qr.tracking) !== 'false') {
-    await addScan({ qr_id: req.params.qrId, user_agent: req.headers['user-agent'], ip_address: req.ip });
+    await addScan({
+      qr_id: req.params.qrId,
+      user_agent: req.headers['user-agent'],
+      ip_address: req.ip,
+      country: req.headers['x-vercel-ip-country'] || '',
+      region: req.headers['x-vercel-ip-country-region'] || '',
+      city: req.headers['x-vercel-ip-city'] || '',
+      referer: req.headers['referer'] || '',
+    });
   }
   // Отдаём промежуточную страницу
   const target = qr.original_url;

@@ -11,9 +11,13 @@ module.exports = async (req, res) => {
 
   const ua = req.headers['user-agent'] || 'unknown';
   const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+  const country = req.headers['x-vercel-ip-country'] || req.headers['x-upstash-country'] || '';
+  const region = req.headers['x-vercel-ip-country-region'] || '';
+  const city = req.headers['x-vercel-ip-city'] || '';
+  const referer = req.headers['referer'] || '';
 
   if (String(qr.tracking) !== 'false') {
-    try { await addScan({ qr_id: qrId, user_agent: ua, ip_address: ip }); } catch (e) { console.error(e); }
+    try { await addScan({ qr_id: qrId, user_agent: ua, ip_address: ip, country, region, city, referer }); } catch (e) { console.error(e); }
   }
 
   // Промежуточная страница с авто-переходом

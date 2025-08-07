@@ -92,7 +92,28 @@ async function deleteQR(id) {
   }
 }
 
-async function addScan({ qr_id, user_agent, ip_address }) {
+function parseUserAgent(ua = '') {
+  const s = ua.toLowerCase();
+  const isBot = /bot|crawl|spider|slurp|facebookexternalhit|vkshare|whatsapp|telegram/i.test(ua);
+  const device_type = isBot ? 'bot' : /mobile|iphone|android|blackberry|iemobile|opera mini/i.test(ua) ? 'mobile' : /ipad|tablet/i.test(ua) ? 'tablet' : 'desktop';
+  let os = 'other';
+  if (/windows nt/i.test(ua)) os = 'windows';
+  else if (/mac os x/i.test(ua)) os = 'macos';
+  else if (/android/i.test(ua)) os = 'android';
+  else if (/ios|iphone|ipad|ipod/i.test(ua)) os = 'ios';
+  else if (/linux/i.test(ua)) os = 'linux';
+
+  let browser = 'other';
+  if (/edg\//i.test(ua)) browser = 'edge';
+  else if (/chrome\//i.test(ua) && !/chromium/i.test(ua)) browser = 'chrome';
+  else if (/safari/i.test(ua) && !/chrome/i.test(ua)) browser = 'safari';
+  else if (/firefox\//i.test(ua)) browser = 'firefox';
+  else if (/opera|opr\//i.test(ua)) browser = 'opera';
+
+  return { device_type, os, browser, is_bot: isBot };
+}
+
+async function addScan({ qr_id, user_agent, ip_address, country, region, city, referer }) {
   const redis = getRedis();
   const scan = {
     id: uuidv4(),
@@ -100,7 +121,13 @@ async function addScan({ qr_id, user_agent, ip_address }) {
     scanned_at: new Date().toISOString(),
     user_agent: user_agent || 'unknown',
     ip_address: ip_address || 'unknown',
+    country: country || 'unknown',
+    region: region || 'unknown',
+    city: city || 'unknown',
+    referer: referer || '',
   };
+
+  Object.assign(scan, parseUserAgent(scan.user_agent));
 
   const uniqueKey = `${scan.ip_address}|${scan.user_agent}`;
 
@@ -155,14 +182,16 @@ async function getStats(qr_id, { days = 30 } = {}) {
     const scans = raw.map(s => JSON.parse(s));
     const unique_visitors = await redis.scard(keyUniques(qr_id));
     const series_daily = buildDailySeries(scans, days);
-    return { ...qr, unique_visitors, scans, series_daily };
+    const breakdowns = buildBreakdowns(scans);
+    return { ...qr, unique_visitors, scans, series_daily, breakdowns };
   }
   const qr = memory.qrs.get(qr_id);
   if (!qr) return null;
   const scans = memory.scans.get(qr_id) || [];
   const unique_visitors = (memory.uniques.get(qr_id) || new Set()).size;
   const series_daily = buildDailySeries(scans, days);
-  return { ...qr, unique_visitors, scans, series_daily };
+  const breakdowns = buildBreakdowns(scans);
+  return { ...qr, unique_visitors, scans, series_daily, breakdowns };
 }
 
 async function getGlobalStats({ days = 30 } = {}) {
@@ -204,7 +233,42 @@ async function getGlobalStats({ days = 30 } = {}) {
     .slice(0, 5)
     .map(x => ({ id: x.id, scan_count: Number(x.scan_count || 0), original_url: x.original_url }));
 
-  return { total_qrs, total_scans, total_unique_visitors, series_daily, top_qrs };
+  const breakdowns = buildBreakdowns(allScans);
+
+  return { total_qrs, total_scans, total_unique_visitors, series_daily, top_qrs, breakdowns };
+}
+
+function aggregateCounts(items, keyFn) {
+  const map = new Map();
+  for (const it of items) {
+    const k = keyFn(it) || 'unknown';
+    map.set(k, (map.get(k) || 0) + 1);
+  }
+  return Array.from(map.entries()).map(([label, value]) => ({ label, value }))
+    .sort((a, b) => b.value - a.value);
+}
+
+function buildBreakdowns(scans) {
+  const byCountry = aggregateCounts(scans, s => (s.country || '').toUpperCase());
+  const byCity = aggregateCounts(scans, s => s.city || '');
+  const byDevice = aggregateCounts(scans, s => s.device_type || '');
+  const byOS = aggregateCounts(scans, s => s.os || '');
+  const byBrowser = aggregateCounts(scans, s => s.browser || '');
+  const byHour = aggregateCounts(scans, s => {
+    try { return String(new Date(s.scanned_at).getHours()).padStart(2, '0'); } catch { return ''; }
+  });
+  const byWeekday = aggregateCounts(scans, s => {
+    try { return ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'][new Date(s.scanned_at).getDay()]; } catch { return ''; }
+  });
+  return {
+    countries: byCountry.slice(0, 10),
+    cities: byCity.slice(0, 10),
+    devices: byDevice,
+    os: byOS,
+    browsers: byBrowser,
+    hours: byHour,
+    weekdays: byWeekday,
+  };
 }
 
 module.exports = {
