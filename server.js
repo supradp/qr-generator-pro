@@ -35,7 +35,12 @@ app.get('/redirect/:qrId', async (req, res) => {
   if (String(qr.tracking) !== 'false') {
     await addScan({ qr_id: req.params.qrId, user_agent: req.headers['user-agent'], ip_address: req.ip });
   }
-  res.redirect(qr.original_url);
+  // Отдаём промежуточную страницу
+  const target = qr.original_url;
+  const safeHref = String(target).replace(/"/g, '&quot;');
+  const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Перенаправление…</title><style>body{margin:0;font-family:system-ui,Segoe UI,Arial,sans-serif;background:#0f1222;color:#e9ecff;display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(1000px 600px at 10% 10%,rgba(102,126,234,.25),transparent),radial-gradient(800px 600px at 90% 70%,rgba(118,75,162,.25),transparent),linear-gradient(120deg,#0f1222,#1a1f35)}.card{max-width:760px;margin:0 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:24px;backdrop-filter:blur(12px)}.btn{display:inline-block;margin-top:12px;padding:12px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.15);text-decoration:none;color:inherit}.bar{height:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:999px;overflow:hidden}.bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#667eea,#764ba2)}</style></head><body><main class="card"><h1>Перенаправляем…</h1><p>Вы переходите на: <a href="${safeHref}">${safeHref}</a></p><div class="bar"><i id="p"></i></div><a class="btn" href="${safeHref}">Перейти сейчас</a></main><script>const href='${safeHref}';const el=document.getElementById('p');let x=0;const t=setInterval(()=>{x+=5;el.style.width=Math.min(x,100)+'%';if(x>=100){clearInterval(t);location.replace(href)}},50);</script></body></html>`;
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.send(html);
 });
 
 app.get('/api/stats/:qrId', async (req, res) => {
