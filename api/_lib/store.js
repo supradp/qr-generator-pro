@@ -7,11 +7,13 @@ const memory = {
   qrs: new Map(), // id → { id, original_url, created_at, scan_count, qr_image, tracking }
   scans: new Map(), // qrId → [ { id, qr_id, scanned_at, user_agent, ip_address } ]
   uniques: new Map(), // qrId → Set(uniqueKey)
+  ids: new Set(),
 };
 
 function keyQR(id) { return `qr:${id}`; }
 function keyScans(id) { return `qr:${id}:scans`; }
 function keyUniques(id) { return `qr:${id}:uniques`; }
+function keyAllIds() { return 'qr:ids'; }
 
 async function createQR({ id = uuidv4(), original_url, qr_image, tracking = true }) {
   const created_at = new Date().toISOString();
@@ -20,8 +22,10 @@ async function createQR({ id = uuidv4(), original_url, qr_image, tracking = true
   const redis = getRedis();
   if (redis) {
     await redis.hset(keyQR(id), data);
+    try { await redis.sadd(keyAllIds(), id); } catch {}
   } else {
     memory.qrs.set(id, data);
+    memory.ids.add(id);
   }
   return data;
 }
@@ -38,14 +42,22 @@ async function getQR(id) {
 async function getAllQRs() {
   const redis = getRedis();
   if (redis) {
-    const stream = redis.scanStream({ match: 'qr:*', count: 100 });
-    const ids = new Set();
-    for await (const keys of stream) {
-      keys.forEach(k => {
-        const parts = k.split(':');
-        if (parts.length === 2) ids.add(parts[1]);
-      });
+    // Быстрый путь: поддерживаемый всеми вариантами (в т.ч. Upstash REST)
+    let ids = [];
+    try { ids = await redis.smembers(keyAllIds()); } catch { ids = []; }
+
+    // Фолбэк: если индекс пуст, пробуем SCAN (на обычном Redis)
+    if ((!ids || ids.length === 0) && typeof redis.scan === 'function') {
+      let cursor = '0';
+      const set = new Set();
+      do {
+        const [next, keys] = await redis.scan(cursor, 'MATCH', 'qr:*', 'COUNT', 100);
+        cursor = next;
+        keys.forEach(k => { const p = k.split(':'); if (p.length === 2) set.add(p[1]); });
+      } while (cursor !== '0');
+      ids = Array.from(set);
     }
+
     const result = [];
     for (const id of ids) {
       const data = await redis.hgetall(keyQR(id));
@@ -61,10 +73,12 @@ async function deleteQR(id) {
   const redis = getRedis();
   if (redis) {
     await redis.del(keyQR(id), keyScans(id), keyUniques(id));
+    try { await redis.srem(keyAllIds(), id); } catch {}
   } else {
     memory.qrs.delete(id);
     memory.scans.delete(id);
     memory.uniques.delete(id);
+    memory.ids.delete(id);
   }
 }
 

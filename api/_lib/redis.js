@@ -35,6 +35,12 @@ function getRedis() {
 
     redis = {
       isUpstashRest: true,
+      // scan для совместимости (используется как фолбэк, возвращает как обычный Redis: [cursor, keys])
+      async scan(cursor='0', ...args){
+        // Upstash REST не поддерживает SCAN natively в том же формате через универсальный endpoint.
+        // Возвращаем пустой результат, чтобы код переключился на индекс.
+        return ['0', []];
+      },
       async hset(key, obj){
         const pairs = Object.entries(obj).flat();
         return call('hset', key, ...pairs);
