@@ -23,8 +23,9 @@ app.post('/api/generate', async (req, res) => {
   }
   const id = uuidv4();
   const redirectUrl = `${req.protocol}://${req.get('host')}/redirect/${id}`;
-  const qr_image = await QRCode.toDataURL(redirectUrl, { errorCorrectionLevel: 'H', width: 1024, margin: 2 });
-  const record = await createQR({ id, original_url: url, qr_image, tracking });
+  const qr_image_png = await QRCode.toDataURL(redirectUrl, { errorCorrectionLevel: 'H', width: 1024, margin: 2 });
+  const qr_image_svg = await QRCode.toString(redirectUrl, { type: 'svg', errorCorrectionLevel: 'H', width: 1024, margin: 2 });
+  const record = await createQR({ id, original_url: url, qr_image_png, qr_image_svg, tracking });
   res.status(201).json({ ...record, short_url: redirectUrl });
 });
 

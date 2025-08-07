@@ -11,7 +11,7 @@
   body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;color:var(--text);background:linear-gradient(120deg,var(--bg1),var(--bg2)) fixed;overflow-x:hidden}
   
   .bg-gradient{position:fixed;inset:0;pointer-events:none;background:radial-gradient(1000px 600px at 10% 10%,rgba(102,126,234,.25),transparent),radial-gradient(800px 600px at 90% 70%,rgba(118,75,162,.25),transparent)}
-  .container{max-width:1100px;margin:0 auto;padding:24px}
+  .container{max-width:1300px;margin:0 auto;padding:24px}
   .header{display:flex;justify-content:space-between;align-items:center}
   .logo{font-weight:800;letter-spacing:.3px}
   .logo span{background:linear-gradient(90deg,var(--grad1),var(--grad2));-webkit-background-clip:text;color:transparent}

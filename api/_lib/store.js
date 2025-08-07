@@ -15,9 +15,19 @@ function keyScans(id) { return `qr:${id}:scans`; }
 function keyUniques(id) { return `qr:${id}:uniques`; }
 function keyAllIds() { return 'qr:ids'; }
 
-async function createQR({ id = uuidv4(), original_url, qr_image, tracking = true }) {
+async function createQR({ id = uuidv4(), original_url, qr_image, qr_image_png, qr_image_svg, tracking = true }) {
   const created_at = new Date().toISOString();
-  const data = { id, original_url, created_at, scan_count: 0, qr_image, tracking };
+  // qr_image: для обратной совместимости (PNG)
+  const data = {
+    id,
+    original_url,
+    created_at,
+    scan_count: 0,
+    qr_image: qr_image || qr_image_png || null,
+    qr_image_png: qr_image_png || qr_image || null,
+    qr_image_svg: qr_image_svg || null,
+    tracking,
+  };
 
   const redis = getRedis();
   if (redis) {

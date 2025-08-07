@@ -38,10 +38,18 @@ document.addEventListener('DOMContentLoaded', () => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Ошибка');
 
-      $('#qrImage').src = data.qr_image;
+      $('#qrImage').src = data.qr_image_png || data.qr_image;
       $('#shortUrl').href = data.short_url;
       $('#shortUrl').textContent = data.short_url;
-      $('#downloadPng').href = data.qr_image;
+      $('#downloadPng').href = data.qr_image_png || data.qr_image;
+      // SVG как Blob URL
+      if (data.qr_image_svg) {
+        const svgBlob = new Blob([data.qr_image_svg], { type: 'image/svg+xml' });
+        const svgUrl = URL.createObjectURL(svgBlob);
+        $('#downloadSvg').href = svgUrl;
+      } else {
+        $('#downloadSvg').removeAttribute('href');
+      }
       $('#result').classList.remove('hidden');
       toast('QR-код создан');
       loadList();
