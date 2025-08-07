@@ -66,6 +66,20 @@ document.addEventListener('DOMContentLoaded', () => {
   $('#refreshGlobal').addEventListener('click', loadGlobal);
   const periodSel = document.getElementById('period');
   const tzSel = document.getElementById('timezone');
+  // Инициализация таймзоны по браузеру (Днепр/Украина → Europe/Kyiv)
+  if (tzSel) {
+    const browserOffset = new Date().getTimezoneOffset(); // например, -180 для Киев (летом)
+    const zoneName = (Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local').replace('Kiev','Kyiv');
+    // Если такого варианта нет в списке — добавим
+    if (![...tzSel.options].some(o => Number(o.value) === browserOffset)) {
+      const label = `Локально (${zoneName})`;
+      const opt = new Option(label, String(browserOffset), true, true);
+      tzSel.add(opt, 0);
+      tzSel.selectedIndex = 0;
+    } else {
+      tzSel.value = String(browserOffset);
+    }
+  }
   if (periodSel) periodSel.addEventListener('change', loadGlobal);
   if (tzSel) tzSel.addEventListener('change', loadGlobal);
 

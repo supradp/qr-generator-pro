@@ -17,6 +17,11 @@ self.addEventListener('activate', (e)=>{
 self.addEventListener('fetch', (e)=>{
   const { request } = e;
   if (request.method !== 'GET') return;
+  const url = new URL(request.url);
+  // Не кэшируем API и редиректы – всегда сеть
+  if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/redirect/')) {
+    return; // пусть идёт обычным путём
+  }
   e.respondWith(
     caches.match(request).then(cached => cached || fetch(request).then(resp => {
       const copy = resp.clone();
