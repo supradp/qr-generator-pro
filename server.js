@@ -5,7 +5,24 @@ const cors = require('cors');
 const { createQR, getAllQRs, getQR, deleteQR, addScan, getStats, getGlobalStats } = require('./api/_lib/store');
 const QRCode = require('qrcode');
 const { v4: uuidv4 } = require('uuid');
-const geoip = require('geoip-lite');
+const https = require('https');
+
+async function fetchJSON(url){
+  if (typeof fetch !== 'undefined'){
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('fetch failed');
+    return resp.json();
+  }
+  return new Promise((resolve, reject)=>{
+    const req = https.get(url, (res)=>{
+      let data='';
+      res.on('data', c=> data+=c);
+      res.on('end', ()=>{ try{ resolve(JSON.parse(data||'{}')); } catch(e){ reject(e); } });
+    });
+    req.on('error', reject);
+    req.setTimeout(2000, ()=>{ req.destroy(); reject(new Error('timeout')); });
+  });
+}
 
 const app = express();
 app.use(cors());
@@ -34,19 +51,19 @@ app.get('/redirect/:qrId', async (req, res) => {
   const qr = await getQR(req.params.qrId);
   if (!qr) return res.status(404).send('QR not found');
   if (String(qr.tracking) !== 'false') {
-    const ipRaw = (req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
+    const allowOverride = (process.env.ALLOW_IP_OVERRIDE === '1') || (process.env.NODE_ENV !== 'production');
+    const ipOverride = allowOverride ? (req.query.__ip || '') : '';
+    const ipRaw = (ipOverride || req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.ip || '').split(',')[0].trim();
     const ip = ipRaw && ipRaw.startsWith('::ffff:') ? ipRaw.slice(7) : ipRaw;
     let country = req.headers['x-vercel-ip-country'] || '';
     let region = req.headers['x-vercel-ip-country-region'] || '';
     let city = req.headers['x-vercel-ip-city'] || '';
     if ((!country || !region || !city) && ip) {
       try {
-        const g = geoip.lookup(ip);
-        if (g) {
-          country = country || (g.country || '');
-          region = region || (g.region || '');
-          city = city || (g.city || '');
-        }
+        const j = await fetchJSON(`https://ipapi.co/${encodeURIComponent(ip)}/json/`);
+        country = country || (j.country || j.country_code || '');
+        region = region || (j.region || j.region_code || j.region_name || '');
+        city = city || (j.city || '');
       } catch {}
     }
     await addScan({
