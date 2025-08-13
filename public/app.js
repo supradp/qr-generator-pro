@@ -63,6 +63,15 @@ document.addEventListener('DOMContentLoaded', () => {
 
   $('#refresh').addEventListener('click', loadList);
   $('#closeDetails').addEventListener('click', ()=> $('#details').classList.add('hidden'));
+  // Табы в деталях
+  $all('.tab-btn').forEach(btn=>btn.addEventListener('click', ()=>{
+    $all('.tab-btn').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const tab = btn.getAttribute('data-tab');
+    $all('.tab-panel').forEach(p=>{
+      p.classList.toggle('hidden', p.getAttribute('data-panel')!==tab);
+    });
+  }));
   $('#refreshGlobal').addEventListener('click', loadGlobal);
   const periodSel = document.getElementById('period');
   const tzSel = document.getElementById('timezone');
@@ -183,10 +192,13 @@ async function openStats(id){
 
     const rows = (data.scans||[]).map(s=>`<tr>
       <td>${formatDate(s.scanned_at)}</td>
-      <td><small>${escapeHtml(s.user_agent||'')}</small></td>
+      <td>${(s.country||'').toString().toUpperCase()}</td>
+      <td>${escapeHtml(s.region||'')}</td>
+      <td>${escapeHtml(s.city||'')}</td>
       <td>${s.ip_address||''}</td>
+      <td><small>${escapeHtml(s.user_agent||'')}</small></td>
     </tr>`).join('');
-    $('#scanTable').innerHTML = rows || '<tr><td colspan="3">Сканов пока нет</td></tr>';
+    $('#scanTable').innerHTML = rows || '<tr><td colspan="6">Сканов пока нет</td></tr>';
   } catch (e) {
     $('#statsMeta').innerHTML = 'Ошибка загрузки';
   }

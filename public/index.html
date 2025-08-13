@@ -129,24 +129,48 @@
         <button id="closeDetails" class="btn btn-ghost"><i data-lucide="x"></i> Закрыть</button>
       </div>
       <div id="statsMeta" class="stats-meta"></div>
-      <div class="charts">
-        <div class="chart-card"><canvas id="chartDaily"></canvas></div>
-        <div class="chart-card"><canvas id="chartUA"></canvas></div>
-        <div class="chart-card"><canvas id="chartCountriesQR"></canvas></div>
-        <div class="chart-card"><canvas id="chartRegionsQR"></canvas></div>
-        <div class="chart-card"><canvas id="chartDevicesQR"></canvas></div>
-        <div class="chart-card"><canvas id="chartOSQR"></canvas></div>
-        <div class="chart-card"><canvas id="chartBrowsersQR"></canvas></div>
-        <div class="chart-card"><canvas id="chartHoursQR"></canvas></div>
-        <div class="chart-card"><canvas id="chartWeekdaysQR"></canvas></div>
+
+      <div class="tabs">
+        <button class="tab-btn active" data-tab="activity">Активность</button>
+        <button class="tab-btn" data-tab="geo">География</button>
+        <button class="tab-btn" data-tab="tech">Технологии</button>
       </div>
+
+      <div class="tab-panel" data-panel="activity">
+        <div class="charts">
+          <div class="chart-card"><canvas id="chartDaily"></canvas></div>
+          <div class="chart-card"><canvas id="chartHoursQR"></canvas></div>
+          <div class="chart-card"><canvas id="chartWeekdaysQR"></canvas></div>
+        </div>
+      </div>
+
+      <div class="tab-panel hidden" data-panel="geo">
+        <div class="charts">
+          <div class="chart-card"><canvas id="chartCountriesQR"></canvas></div>
+          <div class="chart-card"><canvas id="chartRegionsQR"></canvas></div>
+          <div class="chart-card"><canvas id="chartCitiesQR"></canvas></div>
+        </div>
+      </div>
+
+      <div class="tab-panel hidden" data-panel="tech">
+        <div class="charts">
+          <div class="chart-card"><canvas id="chartDevicesQR"></canvas></div>
+          <div class="chart-card"><canvas id="chartOSQR"></canvas></div>
+          <div class="chart-card"><canvas id="chartBrowsersQR"></canvas></div>
+          <div class="chart-card"><canvas id="chartUA"></canvas></div>
+        </div>
+      </div>
+
       <div class="table-wrap">
         <table class="table">
           <thead>
             <tr>
               <th>Время</th>
-              <th>User-Agent</th>
+              <th>Страна</th>
+              <th>Регион</th>
+              <th>Город</th>
               <th>IP</th>
+              <th>User-Agent</th>
             </tr>
           </thead>
           <tbody id="scanTable"></tbody>
