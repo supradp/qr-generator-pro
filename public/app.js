@@ -174,6 +174,7 @@ async function openStats(id){
     const agg = aggregateBy(data.scans||[], s => (s.user_agent||'unknown').split(' ').slice(0,1)[0]);
     drawBarChart('chartUA', agg, 'Топ User-Agent');
     drawBarChart('chartCountriesQR', (data.breakdowns?.countries||[]), 'Страны');
+    drawBarChart('chartRegionsQR', (data.breakdowns?.regions||[]), 'Регионы');
     drawBarChart('chartDevicesQR', (data.breakdowns?.devices||[]), 'Устройства');
     drawBarChart('chartOSQR', (data.breakdowns?.os||[]), 'ОС');
     drawBarChart('chartBrowsersQR', (data.breakdowns?.browsers||[]), 'Браузеры');
@@ -215,6 +216,7 @@ async function loadGlobal(){
     // Топ QR
     drawBarChart('chartTopQrs', data.top_qrs.map(x=>({ label:x.id.slice(0,6), value:x.scan_count })), 'Топ QR по сканам');
     drawBarChart('chartCountries', (data.breakdowns?.countries||[]), 'Страны');
+    drawBarChart('chartRegions', (data.breakdowns?.regions||[]), 'Регионы');
     drawBarChart('chartDevices', (data.breakdowns?.devices||[]), 'Устройства');
     lucideInit();
   }catch(e){

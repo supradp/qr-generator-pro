@@ -276,6 +276,7 @@ function aggregateCounts(items, keyFn) {
 
 function buildBreakdowns(scans, tzOffsetMinutes = 0) {
   const byCountry = aggregateCounts(scans, s => (s.country || '').toUpperCase());
+  const byRegion = aggregateCounts(scans, s => s.region || '');
   const byCity = aggregateCounts(scans, s => s.city || '');
   const byDevice = aggregateCounts(scans, s => s.device_type || '');
   const byOS = aggregateCounts(scans, s => s.os || '');
@@ -288,6 +289,7 @@ function buildBreakdowns(scans, tzOffsetMinutes = 0) {
   });
   return {
     countries: byCountry.slice(0, 10),
+    regions: byRegion.slice(0, 10),
     cities: byCity.slice(0, 10),
     devices: byDevice,
     os: byOS,

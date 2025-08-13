@@ -1,5 +1,6 @@
 // api/redirect/[qrId].js
 const { getQR, addScan } = require('../_lib/store');
+const geoip = require('geoip-lite');
 
 module.exports = async (req, res) => {
   // Параметр qrId из маршрута
@@ -10,10 +11,23 @@ module.exports = async (req, res) => {
   if (!qr) return res.status(404).send('QR not found');
 
   const ua = req.headers['user-agent'] || 'unknown';
-  const ip = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
-  const country = req.headers['x-vercel-ip-country'] || req.headers['x-upstash-country'] || '';
-  const region = req.headers['x-vercel-ip-country-region'] || '';
-  const city = req.headers['x-vercel-ip-city'] || '';
+  const ipRaw = (req.headers['x-forwarded-for'] || req.socket.remoteAddress || '').split(',')[0].trim();
+  const ip = ipRaw && ipRaw.startsWith('::ffff:') ? ipRaw.slice(7) : ipRaw;
+  let country = req.headers['x-vercel-ip-country'] || req.headers['x-upstash-country'] || '';
+  let region = req.headers['x-vercel-ip-country-region'] || '';
+  let city = req.headers['x-vercel-ip-city'] || '';
+
+  // Fallback на локальную GeoIP, если заголовков нет
+  if ((!country || !city || !region) && ip) {
+    try {
+      const geo = geoip.lookup(ip);
+      if (geo) {
+        country = country || (geo.country || '');
+        region = region || (geo.region || '');
+        city = city || (geo.city || '');
+      }
+    } catch {}
+  }
   const referer = req.headers['referer'] || '';
 
   if (String(qr.tracking) !== 'false') {

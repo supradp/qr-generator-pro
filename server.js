@@ -5,6 +5,7 @@ const cors = require('cors');
 const { createQR, getAllQRs, getQR, deleteQR, addScan, getStats, getGlobalStats } = require('./api/_lib/store');
 const QRCode = require('qrcode');
 const { v4: uuidv4 } = require('uuid');
+const geoip = require('geoip-lite');
 
 const app = express();
 app.use(cors());
@@ -33,13 +34,28 @@ app.get('/redirect/:qrId', async (req, res) => {
   const qr = await getQR(req.params.qrId);
   if (!qr) return res.status(404).send('QR not found');
   if (String(qr.tracking) !== 'false') {
+    const ipRaw = (req.headers['x-forwarded-for'] || req.ip || '').split(',')[0].trim();
+    const ip = ipRaw && ipRaw.startsWith('::ffff:') ? ipRaw.slice(7) : ipRaw;
+    let country = req.headers['x-vercel-ip-country'] || '';
+    let region = req.headers['x-vercel-ip-country-region'] || '';
+    let city = req.headers['x-vercel-ip-city'] || '';
+    if ((!country || !region || !city) && ip) {
+      try {
+        const g = geoip.lookup(ip);
+        if (g) {
+          country = country || (g.country || '');
+          region = region || (g.region || '');
+          city = city || (g.city || '');
+        }
+      } catch {}
+    }
     await addScan({
       qr_id: req.params.qrId,
       user_agent: req.headers['user-agent'],
-      ip_address: req.ip,
-      country: req.headers['x-vercel-ip-country'] || '',
-      region: req.headers['x-vercel-ip-country-region'] || '',
-      city: req.headers['x-vercel-ip-city'] || '',
+      ip_address: ip,
+      country,
+      region,
+      city,
       referer: req.headers['referer'] || '',
     });
   }
