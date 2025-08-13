@@ -19,6 +19,31 @@ async function fetchJSON(url){
   });
 }
 
+async function resolveGeo(ip){
+  if (!ip) return {};
+  // 1) ipapi.co
+  try {
+    const j = await fetchJSON(`https://ipapi.co/${encodeURIComponent(ip)}/json/`);
+    const out = {
+      country: j.country || j.country_code || '',
+      region: j.region || j.region_code || j.region_name || '',
+      city: j.city || '',
+    };
+    if (out.country || out.region || out.city) return out;
+  } catch {}
+  // 2) ipwho.is
+  try {
+    const j = await fetchJSON(`https://ipwho.is/${encodeURIComponent(ip)}?lang=en`);
+    const out = {
+      country: j.country_code || j.country || '',
+      region: j.region || j.region_name || '',
+      city: j.city || '',
+    };
+    if (out.country || out.region || out.city) return out;
+  } catch {}
+  return {};
+}
+
 module.exports = async (req, res) => {
   // Параметр qrId из маршрута
   const { qrId } = req.query;
@@ -39,10 +64,10 @@ module.exports = async (req, res) => {
   // Fallback через ipapi.co, если заголовков нет
   if ((!country || !city || !region) && ip) {
     try {
-      const j = await fetchJSON(`https://ipapi.co/${encodeURIComponent(ip)}/json/`);
-      country = country || (j.country || j.country_code || '');
-      region = region || (j.region || j.region_code || j.region_name || '');
-      city = city || (j.city || '');
+      const geo = await resolveGeo(ip);
+      country = country || geo.country || '';
+      region = region || geo.region || '';
+      city = city || geo.city || '';
     } catch {}
   }
   const referer = req.headers['referer'] || '';

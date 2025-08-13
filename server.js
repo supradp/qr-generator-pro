@@ -24,6 +24,29 @@ async function fetchJSON(url){
   });
 }
 
+async function resolveGeo(ip){
+  if (!ip) return {};
+  try {
+    const j = await fetchJSON(`https://ipapi.co/${encodeURIComponent(ip)}/json/`);
+    const out = {
+      country: j.country || j.country_code || '',
+      region: j.region || j.region_code || j.region_name || '',
+      city: j.city || '',
+    };
+    if (out.country || out.region || out.city) return out;
+  } catch {}
+  try {
+    const j = await fetchJSON(`https://ipwho.is/${encodeURIComponent(ip)}?lang=en`);
+    const out = {
+      country: j.country_code || j.country || '',
+      region: j.region || j.region_name || '',
+      city: j.city || '',
+    };
+    if (out.country || out.region || out.city) return out;
+  } catch {}
+  return {};
+}
+
 const app = express();
 app.use(cors());
 app.use(bodyParser.json());
@@ -60,10 +83,10 @@ app.get('/redirect/:qrId', async (req, res) => {
     let city = req.headers['x-vercel-ip-city'] || '';
     if ((!country || !region || !city) && ip) {
       try {
-        const j = await fetchJSON(`https://ipapi.co/${encodeURIComponent(ip)}/json/`);
-        country = country || (j.country || j.country_code || '');
-        region = region || (j.region || j.region_code || j.region_name || '');
-        city = city || (j.city || '');
+        const geo = await resolveGeo(ip);
+        country = country || geo.country || '';
+        region = region || geo.region || '';
+        city = city || geo.city || '';
       } catch {}
     }
     await addScan({
