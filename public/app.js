@@ -41,7 +41,7 @@ document.addEventListener('DOMContentLoaded', () => {
       $('#qrImage').src = data.qr_image_png || data.qr_image;
       $('#shortUrl').href = data.short_url;
       $('#shortUrl').textContent = data.short_url;
-      $('#downloadPng').href = data.qr_image_png || data.qr_image;
+      // $('#downloadPng').href = data.qr_image_png || data.qr_image; // PNG отключён
       // SVG как Blob URL
       if (data.qr_image_svg) {
         const svgBlob = new Blob([data.qr_image_svg], { type: 'image/svg+xml' });
@@ -127,7 +127,7 @@ async function loadList(){
         <td class="actions">
           <button class="btn btn-ghost" data-act="stats" data-id="${x.id}"><i data-lucide="bar-chart-3"></i> Статистика</button>
           <a class="btn btn-ghost" href="/redirect/${x.id}" target="_blank"><i data-lucide="link"></i> Открыть</a>
-          <a class="btn btn-ghost" href="${x.qr_image_png || x.qr_image}" download="qr-${x.id}.png"><i data-lucide="download"></i> PNG</a>
+          <!-- <a class=\"btn btn-ghost\" href=\"${x.qr_image_png || x.qr_image}\" download=\"qr-${x.id}.png\"><i data-lucide=\"download\"></i> PNG</a> -->
           ${x.qr_image_svg ? `<a class=\"btn btn-ghost\" href=\"${svgHref}\" download=\"qr-${x.id}.svg\"><i data-lucide=\"download\"></i> SVG</a>` : ''}
           <button class="btn btn-ghost" data-act="delete" data-id="${x.id}"><i data-lucide="trash-2"></i> Удалить</button>
         </td>
