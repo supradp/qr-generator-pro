@@ -14,7 +14,7 @@
   .container{max-width:1300px;margin:0 auto;padding:24px}
   .header{display:flex;justify-content:space-between;align-items:center}
   .logo{font-weight:800;letter-spacing:.3px}
-  .logo span{background:linear-gradient(90deg,var(--grad1),var(--grad2));-webkit-background-clip:text;color:transparent}
+  .logo span{background:linear-gradient(90deg,var(--grad1),var(--grad2),var(--grad1));background-size:200% 100%;animation:proGlow 4s linear infinite;-webkit-background-clip:text;color:transparent}
   .nav{display:flex;gap:18px}
   .nav-link{color:var(--muted);text-decoration:none;padding:6px 10px;border-radius:10px}
   .nav-link:hover{color:var(--text);background:var(--glass);backdrop-filter:blur(8px)}
@@ -64,6 +64,7 @@
   .hidden{display:none}
   .fade-in{opacity:0;transform:translateY(8px);animation:fade .5s ease-out forwards}
   @keyframes fade{to{opacity:1;transform:none}}
+  @keyframes proGlow{0%{background-position:0% 50%}100%{background-position:200% 50%}}
   
   @media (max-width:720px){
     .form{grid-template-columns:1fr}
