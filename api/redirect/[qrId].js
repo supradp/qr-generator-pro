@@ -89,17 +89,15 @@ module.exports = async (req, res) => {
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
     <style>
-      :root{--bg:#0f1222;--panel:rgba(255,255,255,.06);--border:rgba(255,255,255,.15);--text:#e9ecff;--muted:#aab0d6}
-      *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;color:var(--text);background:radial-gradient(1000px 600px at 10% 10%,rgba(102,126,234,.25),transparent),radial-gradient(800px 600px at 90% 70%,rgba(118,75,162,.25),transparent),linear-gradient(120deg,#0f1222,#1a1f35)}
+      *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;color:#e8f5ec;background:#1c1f22}
       .wrap{max-width:760px;margin:16vh auto;padding:24px}
-      .card{background:var(--panel);border:1px solid var(--border);border-radius:20px;padding:24px;backdrop-filter:blur(12px);box-shadow:0 10px 40px rgba(0,0,0,.25)}
+      .card{background:rgba(0,157,70,.07);border:1px solid rgba(0,157,70,.25);border-radius:20px;padding:28px;backdrop-filter:blur(12px);box-shadow:0 10px 40px rgba(0,0,0,.3)}
       .title{font-size:24px;font-weight:700;margin:0 0 8px}
-      .muted{color:var(--muted);margin:0 0 16px}
-      .btn{display:inline-block;margin-top:12px;padding:12px 16px;border-radius:12px;border:1px solid var(--border);text-decoration:none;color:var(--text)}
-      .link{color:#a9c1ff}
-      .bar{height:10px;background:rgba(255,255,255,.07);border:1px solid var(--border);border-radius:999px;overflow:hidden}
-      .bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#667eea,#764ba2)}
-      code{background:rgba(255,255,255,.07);padding:2px 6px;border-radius:8px}
+      .muted{color:#7aaa85;margin:0 0 16px}
+      .btn{display:inline-block;margin-top:14px;padding:12px 20px;border-radius:12px;border:1px solid rgba(0,157,70,.4);text-decoration:none;color:#e8f5ec;background:rgba(0,157,70,.12)}
+      .link{color:#009d46}
+      .bar{height:8px;background:rgba(255,255,255,.07);border-radius:999px;overflow:hidden;margin:16px 0}
+      .bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#009d46,#00c957);border-radius:999px}
     </style>
   </head>
   <body>

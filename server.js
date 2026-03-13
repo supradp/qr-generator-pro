@@ -1,37 +1,39 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const { createQR, getAllQRs, getQR, deleteQR, addScan, getStats, getGlobalStats } = require('./api/_lib/store');
+const { initDB } = require('./api/_lib/db');
 const QRCode = require('qrcode');
 const { v4: uuidv4 } = require('uuid');
 const https = require('https');
 
-async function fetchJSON(url){
-  if (typeof fetch !== 'undefined'){
+async function fetchJSON(url) {
+  if (typeof fetch !== 'undefined') {
     const resp = await fetch(url);
     if (!resp.ok) throw new Error('fetch failed');
     return resp.json();
   }
-  return new Promise((resolve, reject)=>{
-    const req = https.get(url, (res)=>{
-      let data='';
-      res.on('data', c=> data+=c);
-      res.on('end', ()=>{ try{ resolve(JSON.parse(data||'{}')); } catch(e){ reject(e); } });
+  return new Promise((resolve, reject) => {
+    const req = https.get(url, (res) => {
+      let data = '';
+      res.on('data', c => data += c);
+      res.on('end', () => { try { resolve(JSON.parse(data || '{}')); } catch (e) { reject(e); } });
     });
     req.on('error', reject);
-    req.setTimeout(2000, ()=>{ req.destroy(); reject(new Error('timeout')); });
+    req.setTimeout(2000, () => { req.destroy(); reject(new Error('timeout')); });
   });
 }
 
-async function resolveGeo(ip){
+async function resolveGeo(ip) {
   if (!ip) return {};
   try {
     const j = await fetchJSON(`https://ipapi.co/${encodeURIComponent(ip)}/json/`);
     const out = {
       country: j.country || j.country_code || '',
-      region: j.region || j.region_code || j.region_name || '',
-      city: j.city || '',
+      region:  j.region  || j.region_code  || j.region_name || '',
+      city:    j.city    || '',
     };
     if (out.country || out.region || out.city) return out;
   } catch {}
@@ -39,8 +41,8 @@ async function resolveGeo(ip){
     const j = await fetchJSON(`https://ipwho.is/${encodeURIComponent(ip)}?lang=en`);
     const out = {
       country: j.country_code || j.country || '',
-      region: j.region || j.region_name || '',
-      city: j.city || '',
+      region:  j.region       || j.region_name || '',
+      city:    j.city         || '',
     };
     if (out.country || out.region || out.city) return out;
   } catch {}
@@ -51,15 +53,11 @@ const app = express();
 app.use(cors());
 app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
-// Также отдаём статические файлы по префиксу /public, чтобы ссылки
-// вида "/public/styles.css" и "/public/app.js" работали локально
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
 app.post('/api/generate', async (req, res) => {
   const { url, tracking = true } = req.body || {};
-  try {
-    new URL(url);
-  } catch {
+  try { new URL(url); } catch {
     return res.status(400).json({ error: 'Неверный URL' });
   }
   const id = uuidv4();
@@ -78,46 +76,44 @@ app.get('/redirect/:qrId', async (req, res) => {
     const ipOverride = allowOverride ? (req.query.__ip || '') : '';
     const ipRaw = (ipOverride || req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || req.ip || '').split(',')[0].trim();
     const ip = ipRaw && ipRaw.startsWith('::ffff:') ? ipRaw.slice(7) : ipRaw;
-    let country = req.headers['x-vercel-ip-country'] || '';
-    let region = req.headers['x-vercel-ip-country-region'] || '';
-    let city = req.headers['x-vercel-ip-city'] || '';
+    let country = req.headers['x-vercel-ip-country']        || '';
+    let region  = req.headers['x-vercel-ip-country-region'] || '';
+    let city    = req.headers['x-vercel-ip-city']           || '';
     if ((!country || !region || !city) && ip) {
       try {
         const geo = await resolveGeo(ip);
         country = country || geo.country || '';
-        region = region || geo.region || '';
-        city = city || geo.city || '';
+        region  = region  || geo.region  || '';
+        city    = city    || geo.city    || '';
       } catch {}
     }
     await addScan({
-      qr_id: req.params.qrId,
+      qr_id:      req.params.qrId,
       user_agent: req.headers['user-agent'],
       ip_address: ip,
-      country,
-      region,
-      city,
+      country, region, city,
       referer: req.headers['referer'] || '',
     });
   }
-  // Отдаём промежуточную страницу
-  const target = qr.original_url;
+  const target   = qr.original_url;
   const safeHref = String(target).replace(/"/g, '&quot;');
-  const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1"/><title>Перенаправление…</title><style>body{margin:0;font-family:system-ui,Segoe UI,Arial,sans-serif;background:#0f1222;color:#e9ecff;display:flex;align-items:center;justify-content:center;min-height:100vh;background:radial-gradient(1000px 600px at 10% 10%,rgba(102,126,234,.25),transparent),radial-gradient(800px 600px at 90% 70%,rgba(118,75,162,.25),transparent),linear-gradient(120deg,#0f1222,#1a1f35)}.card{max-width:760px;margin:0 16px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.15);border-radius:20px;padding:24px;backdrop-filter:blur(12px)}.btn{display:inline-block;margin-top:12px;padding:12px 16px;border-radius:12px;border:1px solid rgba(255,255,255,.15);text-decoration:none;color:inherit}.bar{height:10px;background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.15);border-radius:999px;overflow:hidden}.bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#667eea,#764ba2)}</style></head><body><main class="card"><h1>Перенаправляем…</h1><p>Вы переходите на: <a href="${safeHref}">${safeHref}</a></p><div class="bar"><i id="p"></i></div><a class="btn" href="${safeHref}">Перейти сейчас</a></main><script>const href='${safeHref}';const el=document.getElementById('p');let x=0;const t=setInterval(()=>{x+=5;el.style.width=Math.min(x,100)+'%';if(x>=100){clearInterval(t);location.replace(href)}},50);</script></body></html>`;
+  const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Перенаправление…</title><style>*{box-sizing:border-box}body{margin:0;font-family:system-ui,Segoe UI,Arial,sans-serif;background:#1c1f22;color:#e8f5ec;display:flex;align-items:center;justify-content:center;min-height:100vh}.card{max-width:760px;margin:0 16px;background:rgba(0,157,70,.07);border:1px solid rgba(0,157,70,.25);border-radius:20px;padding:28px;backdrop-filter:blur(12px)}.card h1{margin:0 0 12px;font-size:1.4rem}a{color:#009d46}.btn{display:inline-block;margin-top:14px;padding:12px 20px;border-radius:12px;border:1px solid rgba(0,157,70,.4);text-decoration:none;color:#e8f5ec;background:rgba(0,157,70,.12)}.bar{height:8px;background:rgba(255,255,255,.07);border-radius:999px;overflow:hidden;margin:16px 0}.bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#009d46,#00c957);border-radius:999px}</style></head><body><main class="card"><h1>Перенаправляем…</h1><p>Вы переходите на: <a href="${safeHref}">${safeHref}</a></p><div class="bar"><i id="p"></i></div><a class="btn" href="${safeHref}">Перейти сейчас</a></main><script>const el=document.getElementById('p');let x=0;const t=setInterval(()=>{x+=5;el.style.width=Math.min(x,100)+'%';if(x>=100){clearInterval(t);location.replace('${safeHref}')}},50);</script></body></html>`;
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.send(html);
 });
 
 app.get('/api/stats/:qrId', async (req, res) => {
   const days = Number(req.query.days || 30);
-  const stats = await getStats(req.params.qrId, { days });
+  const tz   = Number(req.query.tz   || 0);
+  const stats = await getStats(req.params.qrId, { days, tzOffset: tz });
   if (!stats) return res.status(404).json({ error: 'Not found' });
   res.json(stats);
 });
 
 app.get('/api/stats-global', async (req, res) => {
   const days = Number(req.query.days || 30);
-  const data = await getGlobalStats({ days });
-  res.json(data);
+  const tz   = Number(req.query.tz   || 0);
+  res.json(await getGlobalStats({ days, tzOffset: tz }));
 });
 
 app.get('/api/qr-codes', async (req, res) => {
@@ -132,4 +128,13 @@ app.delete('/api/qr-codes/:qrId', async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => console.log(`Server running at http://localhost:${PORT}`));
+
+initDB()
+  .then(() => {
+    app.listen(PORT, () => console.log(`MOTORNI QR server → http://localhost:${PORT}`));
+  })
+  .catch(err => {
+    console.error('Ошибка подключения к PostgreSQL:', err.message);
+    console.error('Проверьте DATABASE_URL в файле .env');
+    process.exit(1);
+  });

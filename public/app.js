@@ -250,7 +250,7 @@ function drawDailyChart(canvasId, series, label){
   const data = series.map(x=>x.count);
   charts[canvasId] = new Chart(ctx, {
     type:'line',
-    data:{ labels, datasets:[{ label, data, tension:.3, borderColor:'#4facfe', backgroundColor:'rgba(79,172,254,.15)', fill:true }] },
+    data:{ labels, datasets:[{ label, data, tension:.3, borderColor:'#009d46', backgroundColor:'rgba(0,157,70,.15)', fill:true }] },
     options:{ plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, ticks:{ precision:0 } } } }
   });
 }
@@ -260,7 +260,7 @@ function drawBarChart(canvasId, items, label){
   const data = items.map(i=>i.value);
   charts[canvasId] = new Chart(ctx, {
     type:'bar',
-    data:{ labels, datasets:[{ label, data, backgroundColor:'rgba(102,126,234,.6)', borderColor:'#667eea' }] },
+    data:{ labels, datasets:[{ label, data, backgroundColor:'rgba(0,157,70,.55)', borderColor:'#009d46' }] },
     options:{ plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, ticks:{ precision:0 } } } }
   });
 }

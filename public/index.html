@@ -3,36 +3,41 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>QR Generator Pro</title>
+  <title>MOTORNI — QR Platform</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css" />
   <link rel="manifest" href="/manifest.webmanifest">
-  <meta name="theme-color" content="#0f1222" />
+  <meta name="theme-color" content="#1c1f22" />
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script defer src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
   <script defer src="/app.js"></script>
   <script>
-    if ('serviceWorker' in navigator){
-      window.addEventListener('load', ()=>{
-        navigator.serviceWorker.register('/sw.js').catch(()=>{});
-      })
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(() => {});
+      });
     }
   </script>
 </head>
 <body>
   <div class="bg-gradient"></div>
+
   <header class="container header">
-    <h1 class="logo">QR Generator <span>Pro</span></h1>
+    <h1 class="logo">
+      <span class="brand">MOTORNI</span><span class="sub">QR Platform</span>
+    </h1>
     <nav class="nav">
       <a href="#create" class="nav-link">Создать</a>
       <a href="#global" class="nav-link">Статистика</a>
-      <a href="#list" class="nav-link">Мои QR</a>
+      <a href="#list"   class="nav-link">Мои QR</a>
     </nav>
   </header>
 
   <main class="container">
+
+    <!-- ── Общая статистика ── -->
     <section id="global" class="card fade-in">
       <div class="card-head">
         <h2>Общая статистика</h2>
@@ -49,7 +54,9 @@
             <option value="120">Europe/Berlin (+2)</option>
             <option value="-240">US/Eastern (-4)</option>
           </select>
-          <button id="refreshGlobal" class="btn btn-ghost"><i data-lucide="refresh-ccw"></i> Обновить</button>
+          <button id="refreshGlobal" class="btn btn-ghost">
+            <i data-lucide="refresh-ccw"></i> Обновить
+          </button>
         </div>
       </div>
       <div id="globalKpi" class="stats-meta"></div>
@@ -57,11 +64,12 @@
         <div class="chart-card"><canvas id="chartGlobalDaily"></canvas></div>
         <div class="chart-card"><canvas id="chartTopQrs"></canvas></div>
         <div class="chart-card"><canvas id="chartCountries"></canvas></div>
-          <div class="chart-card"><canvas id="chartRegions"></canvas></div>
+        <div class="chart-card"><canvas id="chartRegions"></canvas></div>
         <div class="chart-card"><canvas id="chartDevices"></canvas></div>
       </div>
     </section>
 
+    <!-- ── Создать QR ── -->
     <section id="create" class="card fade-in">
       <h2>Создать новый QR-код</h2>
       <form id="generateForm" class="form">
@@ -88,13 +96,13 @@
           <p><strong>Короткая ссылка:</strong> <a id="shortUrl" href="#" target="_blank"></a></p>
           <div class="actions">
             <button id="copyLink" class="btn btn-ghost"><i data-lucide="copy"></i> Копировать ссылку</button>
-            <!-- <a id="downloadPng" class="btn btn-ghost" download="qr.png"><i data-lucide="download"></i> PNG</a> -->
             <a id="downloadSvg" class="btn btn-ghost" download="qr.svg"><i data-lucide="download"></i> SVG</a>
           </div>
         </div>
       </div>
     </section>
 
+    <!-- ── Список QR ── -->
     <section id="list" class="card fade-in">
       <div class="card-head">
         <h2>Мои QR-коды</h2>
@@ -116,16 +124,11 @@
         </table>
       </div>
     </section>
-    <p style="
-    text-align: right;
-    font-size: 13px;
-    margin-top: 25px;
-    color: gray;
-">by MOTORNI</p>
 
+    <!-- ── Детальная статистика ── -->
     <section id="details" class="card fade-in hidden">
       <div class="card-head">
-        <h2>Статистика</h2>
+        <h2>Статистика QR</h2>
         <button id="closeDetails" class="btn btn-ghost"><i data-lucide="x"></i> Закрыть</button>
       </div>
       <div id="statsMeta" class="stats-meta"></div>
@@ -177,10 +180,12 @@
         </table>
       </div>
     </section>
+
+    <footer class="footer">MOTORNI &copy; 2025</footer>
   </main>
 
   <div id="toast" class="toast hidden">
-    <i data-lucide="info"></i>
+    <i data-lucide="check-circle"></i>
     <span id="toastMsg"></span>
   </div>
 </body>
