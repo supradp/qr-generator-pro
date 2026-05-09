@@ -80,42 +80,121 @@ module.exports = async (req, res) => {
   const target = qr.original_url;
   const safeHref = String(target).replace(/"/g, '&quot;');
   const html = `<!doctype html>
-  <html lang="uk">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Переспрямування…</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-      *{box-sizing:border-box} body{margin:0;font-family:Inter,system-ui,Segoe UI,Arial,sans-serif;color:#e8f5ec;background:#1c1f22}
-      .wrap{max-width:760px;margin:16vh auto;padding:24px}
-      .card{background:rgba(0,157,70,.07);border:1px solid rgba(0,157,70,.25);border-radius:20px;padding:28px;backdrop-filter:blur(12px);box-shadow:0 10px 40px rgba(0,0,0,.3)}
-      .title{font-size:24px;font-weight:700;margin:0 0 8px}
-      .muted{color:#7aaa85;margin:0 0 16px}
-      .btn{display:inline-block;margin-top:14px;padding:12px 20px;border-radius:12px;border:1px solid rgba(0,157,70,.4);text-decoration:none;color:#e8f5ec;background:rgba(0,157,70,.12)}
-      .link{color:#009d46}
-      .bar{height:8px;background:rgba(255,255,255,.07);border-radius:999px;overflow:hidden;margin:16px 0}
-      .bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#009d46,#00c957);border-radius:999px}
-    </style>
-  </head>
-  <body>
-    <main class="wrap">
-      <section class="card">
-        <h1 class="title">Переспрямовуємо…</h1>
-        <p class="muted">Зараз вас буде переспрямовано на: <br><a class="link" href="${safeHref}">${safeHref}</a></p>
-        <div class="bar"><i id="prog"></i></div>
-        <a class="btn" href="${safeHref}">Перейти зараз</a>
-      </section>
-    </main>
-    <script>
-      const href = "${safeHref}";
-      const bar = document.getElementById('prog');
-      let x = 0; const int = setInterval(()=>{ x+=5; bar.style.width = Math.min(x,100)+"%"; if(x>=100){ clearInterval(int); location.replace(href); } }, 50);
-    </script>
-  </body>
-  </html>`;
+<html lang="uk">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>MOTORNI — Перехід…</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@300;400&display=swap" rel="stylesheet">
+  <style>
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family:'JetBrains Mono',monospace;
+      background:#09090B;color:#E2E2E2;
+      min-height:100vh;display:flex;align-items:center;justify-content:center;
+      background-image:radial-gradient(circle,rgba(255,255,255,.035) 1px,transparent 1px);
+      background-size:28px 28px;
+    }
+    .card{
+      width:100%;max-width:520px;margin:24px;
+      padding:36px;
+      border:1px solid rgba(255,255,255,.07);
+      border-radius:12px;
+      background:#111115;
+    }
+    .brand{
+      font-family:'Bebas Neue',sans-serif;
+      font-size:.9rem;letter-spacing:6px;
+      color:rgba(0,255,136,.45);
+      display:flex;align-items:center;gap:10px;
+      margin-bottom:36px;
+    }
+    .brand-sq{
+      display:inline-block;width:16px;height:16px;
+      border:2px solid rgba(0,255,136,.6);border-radius:3px;
+      position:relative;flex-shrink:0;
+    }
+    .brand-sq::after{
+      content:'';position:absolute;inset:3px;
+      background:rgba(0,255,136,.6);border-radius:1px;
+    }
+    .eyebrow{
+      font-size:.58rem;letter-spacing:4px;
+      color:#00FF88;margin-bottom:14px;
+    }
+    .heading{
+      font-family:'Bebas Neue',sans-serif;
+      font-size:3rem;letter-spacing:8px;
+      color:#E2E2E2;line-height:1;
+      margin-bottom:32px;
+    }
+    .dest-label{
+      font-size:.55rem;letter-spacing:3px;
+      color:#555;margin-bottom:8px;
+    }
+    .dest-url{
+      display:block;color:#00FF88;text-decoration:none;
+      font-size:.78rem;word-break:break-all;line-height:1.6;
+      margin-bottom:28px;
+      padding:12px 14px;
+      border:1px solid rgba(0,255,136,.15);
+      border-radius:6px;
+      background:rgba(0,255,136,.05);
+      transition:border-color .2s;
+    }
+    .dest-url:hover{border-color:rgba(0,255,136,.4);}
+    .track{
+      height:2px;background:rgba(255,255,255,.06);
+      border-radius:999px;overflow:hidden;margin-bottom:24px;
+    }
+    .fill{
+      display:block;height:100%;width:0;
+      background:#00FF88;border-radius:999px;
+      box-shadow:0 0 8px rgba(0,255,136,.6);
+    }
+    .row{display:flex;align-items:center;justify-content:space-between;gap:12px;}
+    .go{
+      display:inline-flex;align-items:center;gap:8px;
+      padding:11px 20px;
+      border:1px solid rgba(0,255,136,.3);border-radius:6px;
+      text-decoration:none;color:#E2E2E2;
+      font-size:.7rem;letter-spacing:2px;
+      background:rgba(0,255,136,.08);
+      transition:all .2s;white-space:nowrap;
+    }
+    .go:hover{border-color:#00FF88;color:#00FF88;}
+    .countdown{
+      font-size:.62rem;letter-spacing:2px;color:#444;
+      text-align:right;white-space:nowrap;
+    }
+    .countdown span{color:#E2E2E2;font-size:.88rem;}
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand"><span class="brand-sq"></span>MOTORNI</div>
+    <p class="eyebrow">QR CODE REDIRECT</p>
+    <h1 class="heading">REDIRECTING…</h1>
+    <p class="dest-label">DESTINATION</p>
+    <a class="dest-url" href="${safeHref}">${safeHref}</a>
+    <div class="track"><span class="fill" id="fill"></span></div>
+    <div class="row">
+      <a class="go" href="${safeHref}">ПЕРЕЙТИ ЗАРАЗ →</a>
+      <div class="countdown">АВТО ЧЕРЕЗ <span id="cnt">3</span> С</div>
+    </div>
+  </div>
+  <script>
+    const href="${safeHref}";
+    const fill=document.getElementById('fill');
+    const cnt=document.getElementById('cnt');
+    let p=0,s=3;
+    const ti=setInterval(()=>{p+=100/60;fill.style.width=Math.min(p,100)+'%';},50);
+    const si=setInterval(()=>{s--;cnt.textContent=s;if(s<=0){clearInterval(si);clearInterval(ti);location.replace(href);}},1000);
+  </script>
+</body>
+</html>`;
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   return res.status(200).send(html);
 };
