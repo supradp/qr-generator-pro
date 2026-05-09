@@ -45,10 +45,10 @@ async function resolveGeo(ip){
 }
 
 module.exports = async (req, res) => {
-  // Параметр qrId из маршрута
+  // Параметр qrId з маршруту
   const { qrId } = req.query;
 
-  // Достаём QR
+  // Отримуємо QR
   const qr = await getQR(qrId);
   if (!qr) return res.status(404).send('QR not found');
 
@@ -61,7 +61,7 @@ module.exports = async (req, res) => {
   let region = req.headers['x-vercel-ip-country-region'] || '';
   let city = req.headers['x-vercel-ip-city'] || '';
 
-  // Fallback через ipapi.co, если заголовков нет
+  // Fallback через ipapi.co, якщо немає заголовків
   if ((!country || !city || !region) && ip) {
     try {
       const geo = await resolveGeo(ip);
@@ -76,15 +76,15 @@ module.exports = async (req, res) => {
     try { await addScan({ qr_id: qrId, user_agent: ua, ip_address: ip, country, region, city, referer }); } catch (e) { console.error(e); }
   }
 
-  // Промежуточная страница с авто-переходом
+  // Проміжна сторінка з авто-переходом
   const target = qr.original_url;
   const safeHref = String(target).replace(/"/g, '&quot;');
   const html = `<!doctype html>
-  <html lang="ru">
+  <html lang="uk">
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>Перенаправление…</title>
+    <title>Переспрямування…</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -103,10 +103,10 @@ module.exports = async (req, res) => {
   <body>
     <main class="wrap">
       <section class="card">
-        <h1 class="title">Перенаправляем…</h1>
-        <p class="muted">Сейчас вы будете перенаправлены на: <br><a class="link" href="${safeHref}">${safeHref}</a></p>
+        <h1 class="title">Переспрямовуємо…</h1>
+        <p class="muted">Зараз вас буде переспрямовано на: <br><a class="link" href="${safeHref}">${safeHref}</a></p>
         <div class="bar"><i id="prog"></i></div>
-        <a class="btn" href="${safeHref}">Перейти сейчас</a>
+        <a class="btn" href="${safeHref}">Перейти зараз</a>
       </section>
     </main>
     <script>

@@ -1,6 +1,6 @@
 {
-  "name": "MOTORNI QR Platform",
-  "short_name": "MOTORNI",
+  "name": "MOTORNI — QR-платформа",
+  "short_name": "MOTORNI QR",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#1c1f22",

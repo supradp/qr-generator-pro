@@ -92,7 +92,7 @@ function buildBreakdowns(scans, tzOffsetMinutes = 0) {
     weekdays: aggregateCounts(scans, s => {
       try {
         const d = shiftDateByOffset(new Date(s.scanned_at), tzOffsetMinutes || 0);
-        return ['Вс','Пн','Вт','Ср','Чт','Пт','Сб'][d.getDay()];
+        return ['Нд','Пн','Вт','Ср','Чт','Пт','Сб'][d.getDay()];
       } catch { return ''; }
     }),
   };

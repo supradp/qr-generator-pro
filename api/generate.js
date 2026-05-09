@@ -9,18 +9,18 @@ module.exports = async (req, res) => {
   try {
     const { url, tracking = true } = req.body || {};
 
-    // Валидация URL
+    // Перевірка URL
     try {
       const u = new URL(url);
       if (!['http:', 'https:'].includes(u.protocol)) throw new Error('Invalid protocol');
     } catch (e) {
-      return res.status(400).json({ error: 'Неверный URL' });
+      return res.status(400).json({ error: 'Невірний URL' });
     }
 
     const id = uuidv4();
     const redirectUrl = `${req.headers['x-forwarded-proto'] || 'https'}://${req.headers.host}/redirect/${id}`;
 
-    // Генерируем QR в двух форматах
+    // Генеруємо QR у двох форматах
     const qr_image_png = await QRCode.toDataURL(redirectUrl, { errorCorrectionLevel: 'H', width: 1024, margin: 2 });
     const qr_image_svg = await QRCode.toString(redirectUrl, { type: 'svg', errorCorrectionLevel: 'H', width: 1024, margin: 2 });
 

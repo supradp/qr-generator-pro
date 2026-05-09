@@ -1,4 +1,4 @@
-const CACHE = 'qrpro-static-v1';
+const CACHE = 'qrpro-static-v2';
 const ASSETS = [
   '/',
   '/index.html',
@@ -18,9 +18,9 @@ self.addEventListener('fetch', (e)=>{
   const { request } = e;
   if (request.method !== 'GET') return;
   const url = new URL(request.url);
-  // Не кэшируем API и редиректы – всегда сеть
+  // Не кешуємо API й редіректи — завжди мережа
   if (url.pathname.startsWith('/api/') || url.pathname.startsWith('/redirect/')) {
-    return; // пусть идёт обычным путём
+    return; // звичайний шлях
   }
   e.respondWith(
     caches.match(request).then(cached => cached || fetch(request).then(resp => {

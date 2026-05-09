@@ -58,7 +58,7 @@ app.use('/public', express.static(path.join(__dirname, 'public')));
 app.post('/api/generate', async (req, res) => {
   const { url, tracking = true } = req.body || {};
   try { new URL(url); } catch {
-    return res.status(400).json({ error: 'Неверный URL' });
+    return res.status(400).json({ error: 'Невірний URL' });
   }
   const id = uuidv4();
   const redirectUrl = `${req.protocol}://${req.get('host')}/redirect/${id}`;
@@ -97,7 +97,7 @@ app.get('/redirect/:qrId', async (req, res) => {
   }
   const target   = qr.original_url;
   const safeHref = String(target).replace(/"/g, '&quot;');
-  const html = `<!doctype html><html lang="ru"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Перенаправление…</title><style>*{box-sizing:border-box}body{margin:0;font-family:system-ui,Segoe UI,Arial,sans-serif;background:#1c1f22;color:#e8f5ec;display:flex;align-items:center;justify-content:center;min-height:100vh}.card{max-width:760px;margin:0 16px;background:rgba(0,157,70,.07);border:1px solid rgba(0,157,70,.25);border-radius:20px;padding:28px;backdrop-filter:blur(12px)}.card h1{margin:0 0 12px;font-size:1.4rem}a{color:#009d46}.btn{display:inline-block;margin-top:14px;padding:12px 20px;border-radius:12px;border:1px solid rgba(0,157,70,.4);text-decoration:none;color:#e8f5ec;background:rgba(0,157,70,.12)}.bar{height:8px;background:rgba(255,255,255,.07);border-radius:999px;overflow:hidden;margin:16px 0}.bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#009d46,#00c957);border-radius:999px}</style></head><body><main class="card"><h1>Перенаправляем…</h1><p>Вы переходите на: <a href="${safeHref}">${safeHref}</a></p><div class="bar"><i id="p"></i></div><a class="btn" href="${safeHref}">Перейти сейчас</a></main><script>const el=document.getElementById('p');let x=0;const t=setInterval(()=>{x+=5;el.style.width=Math.min(x,100)+'%';if(x>=100){clearInterval(t);location.replace('${safeHref}')}},50);</script></body></html>`;
+  const html = `<!doctype html><html lang="uk"><head><meta charset="utf-8"/><meta name="viewport" content="width=device-width,initial-scale=1"/><title>Переспрямування…</title><style>*{box-sizing:border-box}body{margin:0;font-family:system-ui,Segoe UI,Arial,sans-serif;background:#1c1f22;color:#e8f5ec;display:flex;align-items:center;justify-content:center;min-height:100vh}.card{max-width:760px;margin:0 16px;background:rgba(0,157,70,.07);border:1px solid rgba(0,157,70,.25);border-radius:20px;padding:28px;backdrop-filter:blur(12px)}.card h1{margin:0 0 12px;font-size:1.4rem}a{color:#009d46}.btn{display:inline-block;margin-top:14px;padding:12px 20px;border-radius:12px;border:1px solid rgba(0,157,70,.4);text-decoration:none;color:#e8f5ec;background:rgba(0,157,70,.12)}.bar{height:8px;background:rgba(255,255,255,.07);border-radius:999px;overflow:hidden;margin:16px 0}.bar>i{display:block;height:100%;width:0;background:linear-gradient(90deg,#009d46,#00c957);border-radius:999px}</style></head><body><main class="card"><h1>Переспрямовуємо…</h1><p>Перехід на: <a href="${safeHref}">${safeHref}</a></p><div class="bar"><i id="p"></i></div><a class="btn" href="${safeHref}">Перейти зараз</a></main><script>const el=document.getElementById('p');let x=0;const t=setInterval(()=>{x+=5;el.style.width=Math.min(x,100)+'%';if(x>=100){clearInterval(t);location.replace('${safeHref}')}},50);</script></body></html>`;
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
   res.send(html);
 });
@@ -134,7 +134,7 @@ initDB()
     app.listen(PORT, () => console.log(`MOTORNI QR server → http://localhost:${PORT}`));
   })
   .catch(err => {
-    console.error('Ошибка подключения к PostgreSQL:', err.message);
-    console.error('Проверьте DATABASE_URL в файле .env');
+    console.error('Помилка підключення до PostgreSQL:', err.message);
+    console.error('Перевірте DATABASE_URL у файлі .env');
     process.exit(1);
   });

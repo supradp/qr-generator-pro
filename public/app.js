@@ -20,35 +20,35 @@ document.addEventListener('DOMContentLoaded', () => {
     Chart.defaults.font.size = 10;
   }
 
-  // Плавная прокрутка
+  // Плавна прокрутка
   $all('a[href^="#"]').forEach(a => a.addEventListener('click', e => {
     const id = a.getAttribute('href');
     const el = document.querySelector(id);
     if (el){ e.preventDefault(); el.scrollIntoView({ behavior:'smooth' }); }
   }));
 
-  // Генерация
+  // Генерація
   $('#generateForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const url = $('#url').value.trim();
     const tracking = $('#tracking').checked;
 
-    try { new URL(url); } catch { return toast('Введите корректный URL'); }
+    try { new URL(url); } catch { return toast('Введіть коректний URL'); }
 
-    const btn = e.submitter; const old = btn.innerHTML; btn.disabled = true; btn.innerHTML = 'Создание…';
+    const btn = e.submitter; const old = btn.innerHTML; btn.disabled = true; btn.innerHTML = 'Створення…';
     try {
       const res = await fetch('/api/generate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url, tracking }),
       });
       const data = await res.json();
-      if (!res.ok) throw new Error(data.error || 'Ошибка');
+      if (!res.ok) throw new Error(data.error || 'Помилка');
 
       $('#qrImage').src = data.qr_image_png || data.qr_image;
       $('#shortUrl').href = data.short_url;
       $('#shortUrl').textContent = data.short_url;
-      // $('#downloadPng').href = data.qr_image_png || data.qr_image; // PNG отключён
-      // SVG как Blob URL
+      // $('#downloadPng').href = data.qr_image_png || data.qr_image; // PNG вимкнено
+      // SVG як Blob URL
       if (data.qr_image_svg) {
         const svgBlob = new Blob([data.qr_image_svg], { type: 'image/svg+xml' });
         const svgUrl = URL.createObjectURL(svgBlob);
@@ -57,19 +57,19 @@ document.addEventListener('DOMContentLoaded', () => {
         $('#downloadSvg').removeAttribute('href');
       }
       $('#result').classList.remove('hidden');
-      toast('QR-код создан');
+      toast('QR-код створено');
       loadList();
     } catch (err) { toast(err.message); }
     finally { btn.disabled = false; btn.innerHTML = old; }
   });
 
   $('#copyLink').addEventListener('click', async () => {
-    const link = $('#shortUrl').href; await navigator.clipboard.writeText(link); toast('Ссылка скопирована');
+    const link = $('#shortUrl').href; await navigator.clipboard.writeText(link); toast('Посилання скопійовано');
   });
 
   $('#refresh').addEventListener('click', loadList);
   $('#closeDetails').addEventListener('click', ()=> $('#details').classList.add('hidden'));
-  // Табы в деталях
+  // Вкладки в деталях
   $all('.tab-btn').forEach(btn=>btn.addEventListener('click', ()=>{
     $all('.tab-btn').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
@@ -81,11 +81,10 @@ document.addEventListener('DOMContentLoaded', () => {
   $('#refreshGlobal').addEventListener('click', loadGlobal);
   const periodSel = document.getElementById('period');
   const tzSel = document.getElementById('timezone');
-  // Инициализация таймзоны по браузеру (Днепр/Украина → Europe/Kyiv)
+  // Часовий пояс за браузером
   if (tzSel) {
-    const browserOffset = new Date().getTimezoneOffset(); // например, -180 для Киев (летом)
+    const browserOffset = new Date().getTimezoneOffset();
     const zoneName = (Intl.DateTimeFormat().resolvedOptions().timeZone || 'Local').replace('Kiev','Kyiv');
-    // Если такого варианта нет в списке — добавим
     if (![...tzSel.options].some(o => Number(o.value) === browserOffset)) {
       const label = `Локально (${zoneName})`;
       const opt = new Option(label, String(browserOffset), true, true);
@@ -104,20 +103,19 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadList(){
   const tbody = $('#qrTable');
-  tbody.innerHTML = '<tr><td colspan="6">Загрузка…</td></tr>';
+  tbody.innerHTML = '<tr><td colspan="6">Завантаження…</td></tr>';
   try {
     const res = await fetch('/api/qr-codes');
     const arr = await res.json();
-    if (!Array.isArray(arr)) throw new Error('Ошибка загрузки');
+    if (!Array.isArray(arr)) throw new Error('Помилка завантаження');
 
     if (arr.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6">Пока нет QR-кодов</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6">Поки немає QR-кодів</td></tr>';
       lucideInit();
       return;
     }
 
     const rows = await Promise.all(arr.map(async (x)=>{
-      // Для уникальных нужно дёрнуть stats (чтобы не хранить лишнее в списке)
       let uniques = 0;
       try {
         const st = await (await fetch(`/api/stats/${x.id}`)).json();
@@ -129,13 +127,13 @@ async function loadList(){
         <td><a href="${x.original_url}" target="_blank">${escapeHtml(x.original_url)}</a></td>
         <td>${x.scan_count || 0}</td>
         <td>${uniques}</td>
-        <td><span class="status ${String(x.tracking)!=='false'?'on':''}">${String(x.tracking)!=='false'?'Отслеживается':'Без трекинга'}</span></td>
+        <td><span class="status ${String(x.tracking)!=='false'?'on':''}">${String(x.tracking)!=='false'?'Відстежується':'Без трекінгу'}</span></td>
         <td class="actions">
           <button class="btn btn-ghost" data-act="stats" data-id="${x.id}"><i data-lucide="bar-chart-3"></i> Статистика</button>
-          <a class="btn btn-ghost" href="/redirect/${x.id}" target="_blank"><i data-lucide="link"></i> Открыть</a>
+          <a class="btn btn-ghost" href="/redirect/${x.id}" target="_blank"><i data-lucide="link"></i> Відкрити</a>
           <!-- <a class=\"btn btn-ghost\" href=\"${x.qr_image_png || x.qr_image}\" download=\"qr-${x.id}.png\"><i data-lucide=\"download\"></i> PNG</a> -->
           ${x.qr_image_svg ? `<a class=\"btn btn-ghost\" href=\"${svgHref}\" download=\"qr-${x.id}.svg\"><i data-lucide=\"download\"></i> SVG</a>` : ''}
-          <button class="btn btn-ghost" data-act="delete" data-id="${x.id}"><i data-lucide="trash-2"></i> Удалить</button>
+          <button class="btn btn-ghost" data-act="delete" data-id="${x.id}"><i data-lucide="trash-2"></i> Видалити</button>
         </td>
       </tr>`;
     }));
@@ -154,21 +152,21 @@ async function loadList(){
     }, { once: true });
 
   } catch (e) {
-    tbody.innerHTML = '<tr><td colspan="6">Ошибка загрузки</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6">Помилка завантаження</td></tr>';
   }
 }
 
 async function onDelete(id){
-  if (!confirm('Удалить QR-код и его статистику?')) return;
+  if (!confirm('Видалити QR-код і його статистику?')) return;
   const res = await fetch(`/api/qr-codes/${id}`, { method: 'DELETE' });
-  if (res.status === 204) { toast('Удалено'); loadList(); }
-  else { const j = await res.json().catch(()=>({})); toast(j.error||'Ошибка удаления'); }
+  if (res.status === 204) { toast('Видалено'); loadList(); }
+  else { const j = await res.json().catch(()=>({})); toast(j.error||'Помилка видалення'); }
 }
 
 async function openStats(id){
   const panel = $('#details');
   panel.classList.remove('hidden');
-  $('#statsMeta').innerHTML = 'Загрузка…';
+  $('#statsMeta').innerHTML = 'Завантаження…';
   $('#scanTable').innerHTML = '';
   try {
     const days = Number(document.getElementById('period')?.value || 30);
@@ -176,25 +174,23 @@ async function openStats(id){
     const data = await (await fetch(`/api/stats/${id}?days=${days}&tz=${tz}`)).json();
     const meta = `
       <div class="pill pill-sm"><strong>ID</strong><code>${data.id.slice(0,12)}…</code></div>
-      <div class="pill"><strong>ВСЕГО СКАНОВ</strong>${data.scan_count}</div>
-      <div class="pill"><strong>УНИКАЛЬНЫЕ</strong>${data.unique_visitors}</div>
+      <div class="pill"><strong>УСЬОГО СКАНУВАНЬ</strong>${data.scan_count}</div>
+      <div class="pill"><strong>УНІКАЛЬНІ</strong>${data.unique_visitors}</div>
       <div class="pill pill-sm" style="grid-column:1/-1"><strong>URL</strong><a href="${data.original_url}" target="_blank">${escapeHtml(data.original_url)}</a></div>
     `;
     $('#statsMeta').innerHTML = meta;
 
-    // График по дням
-    drawDailyChart('chartDaily', data.series_daily, 'Сканы по дням');
+    drawDailyChart('chartDaily', data.series_daily, 'Сканування за днями');
 
-    // Диаграмма по User-Agent
     const agg = aggregateBy(data.scans||[], s => (s.user_agent||'unknown').split(' ').slice(0,1)[0]);
     drawBarChart('chartUA', agg, 'Топ User-Agent');
-    drawBarChart('chartCountriesQR', (data.breakdowns?.countries||[]), 'Страны');
-    drawBarChart('chartRegionsQR', (data.breakdowns?.regions||[]), 'Регионы');
-    drawBarChart('chartDevicesQR', (data.breakdowns?.devices||[]), 'Устройства');
+    drawBarChart('chartCountriesQR', (data.breakdowns?.countries||[]), 'Країни');
+    drawBarChart('chartRegionsQR', (data.breakdowns?.regions||[]), 'Регіони');
+    drawBarChart('chartDevicesQR', (data.breakdowns?.devices||[]), 'Пристрої');
     drawBarChart('chartOSQR', (data.breakdowns?.os||[]), 'ОС');
-    drawBarChart('chartBrowsersQR', (data.breakdowns?.browsers||[]), 'Браузеры');
-    drawBarChart('chartHoursQR', (data.breakdowns?.hours||[]), 'Часы');
-    drawBarChart('chartWeekdaysQR', (data.breakdowns?.weekdays||[]), 'Дни недели');
+    drawBarChart('chartBrowsersQR', (data.breakdowns?.browsers||[]), 'Браузери');
+    drawBarChart('chartHoursQR', (data.breakdowns?.hours||[]), 'Години');
+    drawBarChart('chartWeekdaysQR', (data.breakdowns?.weekdays||[]), 'Дні тижня');
 
     const rows = (data.scans||[]).map(s=>`<tr>
       <td>${formatDate(s.scanned_at)}</td>
@@ -204,14 +200,14 @@ async function openStats(id){
       <td>${s.ip_address||''}</td>
       <td><small>${escapeHtml(s.user_agent||'')}</small></td>
     </tr>`).join('');
-    $('#scanTable').innerHTML = rows || '<tr><td colspan="6">Сканов пока нет</td></tr>';
+    $('#scanTable').innerHTML = rows || '<tr><td colspan="6">Сканувань поки немає</td></tr>';
   } catch (e) {
-    $('#statsMeta').innerHTML = 'Ошибка загрузки';
+    $('#statsMeta').innerHTML = 'Помилка завантаження';
   }
 }
 
 function formatDate(iso){
-  try { return new Date(iso).toLocaleString(); } catch { return iso; }
+  try { return new Date(iso).toLocaleString('uk-UA'); } catch { return iso; }
 }
 function escapeHtml(str=''){
   return str.replace(/[&<>\"']/g, (c)=>({
@@ -219,30 +215,29 @@ function escapeHtml(str=''){
   })[c]);
 }
 
-// ====== Глобальная статистика ======
+// ====== Глобальна статистика ======
 async function loadGlobal(){
   const days = Number(document.getElementById('period')?.value || 30);
   const tz = Number(document.getElementById('timezone')?.value || 0);
   try{
     const data = await (await fetch(`/api/stats-global?days=${days}&tz=${tz}`)).json();
     $('#globalKpi').innerHTML = `
-      <div class="pill"><strong>QR ВСЕГО</strong>${data.total_qrs}</div>
-      <div class="pill"><strong>СКАНЫ ВСЕГО</strong>${data.total_scans}</div>
-      <div class="pill"><strong>УНИКАЛЬНЫЕ</strong>${data.total_unique_visitors}</div>
+      <div class="pill"><strong>QR УСЬОГО</strong>${data.total_qrs}</div>
+      <div class="pill"><strong>СКАНУВАНЬ УСЬОГО</strong>${data.total_scans}</div>
+      <div class="pill"><strong>УНІКАЛЬНІ</strong>${data.total_unique_visitors}</div>
     `;
-    drawDailyChart('chartGlobalDaily', data.series_daily, 'Все сканы по дням');
-    // Топ QR
-    drawBarChart('chartTopQrs', data.top_qrs.map(x=>({ label:x.id.slice(0,6), value:x.scan_count })), 'Топ QR по сканам');
-    drawBarChart('chartCountries', (data.breakdowns?.countries||[]), 'Страны');
-    drawBarChart('chartRegions', (data.breakdowns?.regions||[]), 'Регионы');
-    drawBarChart('chartDevices', (data.breakdowns?.devices||[]), 'Устройства');
+    drawDailyChart('chartGlobalDaily', data.series_daily, 'Усі сканування за днями');
+    drawBarChart('chartTopQrs', data.top_qrs.map(x=>({ label:x.id.slice(0,6), value:x.scan_count })), 'Топ QR за скануваннями');
+    drawBarChart('chartCountries', (data.breakdowns?.countries||[]), 'Країни');
+    drawBarChart('chartRegions', (data.breakdowns?.regions||[]), 'Регіони');
+    drawBarChart('chartDevices', (data.breakdowns?.devices||[]), 'Пристрої');
     lucideInit();
   }catch(e){
-    $('#globalKpi').innerHTML = 'Ошибка загрузки';
+    $('#globalKpi').innerHTML = 'Помилка завантаження';
   }
 }
 
-// ====== helpers для графиков ======
+// ====== Допоміжні для графіків ======
 let charts = {};
 function ensureCtx(id){
   const el = document.getElementById(id);

@@ -1,9 +1,9 @@
 <!doctype html>
-<html lang="ru">
+<html lang="uk">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>MOTORNI — QR Platform</title>
+  <title>MOTORNI — QR-платформа</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@300;400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
@@ -32,9 +32,9 @@
         <span class="logo-tag">QR</span>
       </a>
       <nav class="nav">
-        <a href="#create" class="nav-link"><span class="nav-idx">01</span>Создать</a>
+        <a href="#create" class="nav-link"><span class="nav-idx">01</span>Створити</a>
         <a href="#global" class="nav-link"><span class="nav-idx">02</span>Статистика</a>
-        <a href="#list"   class="nav-link"><span class="nav-idx">03</span>Мои QR</a>
+        <a href="#list"   class="nav-link"><span class="nav-idx">03</span>Мої QR</a>
       </nav>
       <div class="live-badge">
         <span class="live-dot"></span>LIVE
@@ -56,12 +56,12 @@
     <section id="create" class="section">
       <div class="section-hd">
         <span class="section-num">01</span>
-        <h2 class="section-title">СОЗДАТЬ QR-КОД</h2>
+        <h2 class="section-title">СТВОРИТИ QR-КОД</h2>
       </div>
       <div class="create-card">
         <form id="generateForm" class="create-form">
           <div class="field">
-            <label class="field-label" for="url">ЦЕЛЕВОЙ URL</label>
+            <label class="field-label" for="url">ЦІЛЬОВИЙ URL</label>
             <input id="url" name="url" type="url" placeholder="https://example.com" required class="field-input">
           </div>
           <div class="track-row">
@@ -69,23 +69,23 @@
               <input type="checkbox" id="tracking" checked class="toggle-input">
               <span class="toggle-rail"><span class="toggle-thumb"></span></span>
             </label>
-            <span class="track-label">ОТСЛЕЖИВАНИЕ СКАНИРОВАНИЙ</span>
+            <span class="track-label">ВІДСТЕЖЕННЯ СКАНУВАНЬ</span>
           </div>
           <button class="generate-btn" type="submit">
             <i data-lucide="qr-code"></i>
-            СГЕНЕРИРОВАТЬ
+            ЗГЕНЕРУВАТИ
           </button>
         </form>
 
         <div id="result" class="result-panel hidden">
           <div class="qr-wrap">
-            <img id="qrImage" alt="QR Code" />
+            <img id="qrImage" alt="QR-код" />
           </div>
           <div class="result-meta">
-            <p class="result-eyebrow">КОРОТКАЯ ССЫЛКА</p>
+            <p class="result-eyebrow">КОРОТКЕ ПОСИЛАННЯ</p>
             <a id="shortUrl" href="#" target="_blank" class="result-url"></a>
             <div class="result-btns">
-              <button id="copyLink" class="ghost-btn"><i data-lucide="copy"></i> КОПИРОВАТЬ</button>
+              <button id="copyLink" class="ghost-btn"><i data-lucide="copy"></i> КОПІЮВАТИ</button>
               <a id="downloadSvg" class="ghost-btn" download="qr.svg"><i data-lucide="download"></i> SVG</a>
             </div>
           </div>
@@ -97,19 +97,19 @@
     <section id="global" class="section">
       <div class="section-hd">
         <span class="section-num">02</span>
-        <h2 class="section-title">ГЛОБАЛЬНАЯ СТАТИСТИКА</h2>
+        <h2 class="section-title">ГЛОБАЛЬНА СТАТИСТИКА</h2>
         <div class="hd-controls">
           <select id="period" class="ctrl-sel">
-            <option value="7">7Д</option>
-            <option value="30" selected>30Д</option>
-            <option value="60">60Д</option>
-            <option value="90">90Д</option>
+            <option value="7">7 д</option>
+            <option value="30" selected>30 д</option>
+            <option value="60">60 д</option>
+            <option value="90">90 д</option>
           </select>
           <select id="timezone" class="ctrl-sel">
             <option value="0">UTC</option>
-            <option value="180">Kyiv +3</option>
-            <option value="120">Berlin +2</option>
-            <option value="-240">Eastern -4</option>
+            <option value="180">Київ +3</option>
+            <option value="120">Берлін +2</option>
+            <option value="-240">Східне -4</option>
           </select>
           <button id="refreshGlobal" class="icon-btn"><i data-lucide="refresh-ccw"></i></button>
         </div>
@@ -128,7 +128,7 @@
     <section id="list" class="section">
       <div class="section-hd">
         <span class="section-num">03</span>
-        <h2 class="section-title">МОИ QR-КОДЫ</h2>
+        <h2 class="section-title">МОЇ QR-КОДИ</h2>
         <button id="refresh" class="icon-btn"><i data-lucide="refresh-ccw"></i></button>
       </div>
       <div class="tbl-wrap">
@@ -137,10 +137,10 @@
             <tr>
               <th>ID</th>
               <th>URL</th>
-              <th>СКАНЫ</th>
-              <th>УНИК.</th>
+              <th>СКАНИ</th>
+              <th>УНІК.</th>
               <th>СТАТУС</th>
-              <th>ДЕЙСТВИЯ</th>
+              <th>ДІЇ</th>
             </tr>
           </thead>
           <tbody id="qrTable"></tbody>
@@ -152,15 +152,15 @@
     <section id="details" class="section hidden">
       <div class="section-hd">
         <span class="section-num">→</span>
-        <h2 class="section-title">ДЕТАЛЬНАЯ СТАТИСТИКА</h2>
+        <h2 class="section-title">ДЕТАЛЬНА СТАТИСТИКА</h2>
         <button id="closeDetails" class="icon-btn"><i data-lucide="x"></i></button>
       </div>
       <div id="statsMeta" class="kpi-grid"></div>
 
       <div class="tabs">
-        <button class="tab-btn active" data-tab="activity">АКТИВНОСТЬ</button>
-        <button class="tab-btn" data-tab="geo">ГЕОГРАФИЯ</button>
-        <button class="tab-btn" data-tab="tech">ТЕХНОЛОГИИ</button>
+        <button class="tab-btn active" data-tab="activity">АКТИВНІСТЬ</button>
+        <button class="tab-btn" data-tab="geo">ГЕОГРАФІЯ</button>
+        <button class="tab-btn" data-tab="tech">ТЕХНОЛОГІЇ</button>
       </div>
 
       <div class="tab-panel" data-panel="activity">
@@ -190,10 +190,10 @@
         <table class="data-tbl">
           <thead>
             <tr>
-              <th>ВРЕМЯ</th>
-              <th>СТРАНА</th>
-              <th>РЕГИОН</th>
-              <th>ГОРОД</th>
+              <th>ЧАС</th>
+              <th>КРАЇНА</th>
+              <th>РЕГІОН</th>
+              <th>МІСТО</th>
               <th>IP</th>
               <th>USER-AGENT</th>
             </tr>
