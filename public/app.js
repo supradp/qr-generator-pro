@@ -20,6 +20,44 @@ document.addEventListener('DOMContentLoaded', () => {
     Chart.defaults.font.size = 10;
   }
 
+  // Авто-фокус на поле URL
+  setTimeout(() => $('#url')?.focus(), 150);
+
+  // Кнопка очищення URL + інлайн-помилки
+  const urlInput = $('#url');
+  const urlClear = $('#urlClear');
+  const urlError = $('#urlError');
+  urlInput?.addEventListener('input', () => {
+    urlClear?.classList.toggle('hidden', !urlInput.value);
+    urlError?.classList.add('hidden');
+  });
+  urlClear?.addEventListener('click', () => {
+    urlInput.value = '';
+    urlClear.classList.add('hidden');
+    urlError?.classList.add('hidden');
+    urlInput.focus();
+  });
+
+  // Мобільне меню (гамбургер)
+  const burger = $('#burger');
+  const mobileNav = $('#mobileNav');
+  burger?.addEventListener('click', () => {
+    burger.classList.toggle('open');
+    mobileNav?.classList.toggle('hidden');
+  });
+  $all('#mobileNav .mnav-link').forEach(a => a.addEventListener('click', () => {
+    burger?.classList.remove('open');
+    mobileNav?.classList.add('hidden');
+  }));
+
+  // Кнопка "Новий QR"
+  $('#newQr')?.addEventListener('click', () => {
+    $('#result').classList.add('hidden');
+    urlInput.value = '';
+    urlClear?.classList.add('hidden');
+    urlInput.focus();
+  });
+
   // Плавна прокрутка
   $all('a[href^="#"]').forEach(a => a.addEventListener('click', e => {
     const id = a.getAttribute('href');
@@ -33,7 +71,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const url = $('#url').value.trim();
     const tracking = $('#tracking').checked;
 
-    try { new URL(url); } catch { return toast('Введіть коректний URL'); }
+    try { new URL(url); } catch {
+      if (urlError) { urlError.textContent = 'Введіть коректний URL (починається з https://)'; urlError.classList.remove('hidden'); }
+      urlInput?.focus();
+      return;
+    }
 
     const btn = e.submitter; const old = btn.innerHTML; btn.disabled = true; btn.innerHTML = 'Створення…';
     try {
@@ -57,6 +99,7 @@ document.addEventListener('DOMContentLoaded', () => {
         $('#downloadSvg').removeAttribute('href');
       }
       $('#result').classList.remove('hidden');
+      setTimeout(() => $('#result').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 60);
       toast('QR-код створено');
       loadList();
     } catch (err) { toast(err.message); }
@@ -64,11 +107,21 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   $('#copyLink').addEventListener('click', async () => {
-    const link = $('#shortUrl').href; await navigator.clipboard.writeText(link); toast('Посилання скопійовано');
+    const link = $('#shortUrl').href;
+    await navigator.clipboard.writeText(link);
+    const btn = $('#copyLink');
+    const orig = btn.innerHTML;
+    btn.innerHTML = '<i data-lucide="check"></i> СКОПІЙОВАНО';
+    lucideInit();
+    setTimeout(() => { btn.innerHTML = orig; lucideInit(); }, 2200);
+    toast('Посилання скопійовано');
   });
 
   $('#refresh').addEventListener('click', loadList);
-  $('#closeDetails').addEventListener('click', ()=> $('#details').classList.add('hidden'));
+  $('#closeDetails').addEventListener('click', () => {
+    $('#details').classList.add('hidden');
+    document.getElementById('list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  });
   // Вкладки в деталях
   $all('.tab-btn').forEach(btn=>btn.addEventListener('click', ()=>{
     $all('.tab-btn').forEach(b=>b.classList.remove('active'));
@@ -103,14 +156,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
 async function loadList(){
   const tbody = $('#qrTable');
-  tbody.innerHTML = '<tr><td colspan="6">Завантаження…</td></tr>';
+  const refreshBtn = $('#refresh');
+  refreshBtn?.classList.add('loading');
+  tbody.innerHTML = '<tr><td colspan="6" class="tbl-center"><div class="loading-dots"><span></span><span></span><span></span></div></td></tr>';
   try {
     const res = await fetch('/api/qr-codes');
     const arr = await res.json();
     if (!Array.isArray(arr)) throw new Error('Помилка завантаження');
 
     if (arr.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6">Поки немає QR-кодів</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="6" class="tbl-center"><div class="empty-state"><i data-lucide="qr-code"></i><p>QR-КОДІВ ЩЕ НЕМАЄ</p><a href="#create" class="ghost-btn"><i data-lucide="plus"></i> СТВОРИТИ ПЕРШИЙ</a></div></td></tr>';
       lucideInit();
       return;
     }
@@ -124,7 +179,7 @@ async function loadList(){
       const svgHref = x.qr_image_svg ? `data:image/svg+xml;utf8,${encodeURIComponent(x.qr_image_svg)}` : '';
       return `<tr>
         <td><code>${x.id.slice(0,8)}</code></td>
-        <td><a href="${x.original_url}" target="_blank">${escapeHtml(x.original_url)}</a></td>
+        <td class="url-cell"><a href="${x.original_url}" target="_blank" title="${escapeHtml(x.original_url)}">${escapeHtml(x.original_url)}</a></td>
         <td>${x.scan_count || 0}</td>
         <td>${uniques}</td>
         <td><span class="status ${String(x.tracking)!=='false'?'on':''}">${String(x.tracking)!=='false'?'Відстежується':'Без трекінгу'}</span></td>
@@ -152,7 +207,10 @@ async function loadList(){
     }, { once: true });
 
   } catch (e) {
-    tbody.innerHTML = '<tr><td colspan="6">Помилка завантаження</td></tr>';
+    tbody.innerHTML = '<tr><td colspan="6" class="tbl-center"><div class="empty-state"><p>ПОМИЛКА ЗАВАНТАЖЕННЯ</p></div></td></tr>';
+  } finally {
+    refreshBtn?.classList.remove('loading');
+    lucideInit();
   }
 }
 
@@ -166,6 +224,7 @@ async function onDelete(id){
 async function openStats(id){
   const panel = $('#details');
   panel.classList.remove('hidden');
+  setTimeout(() => panel.scrollIntoView({ behavior: 'smooth', block: 'start' }), 60);
   $('#statsMeta').innerHTML = 'Завантаження…';
   $('#scanTable').innerHTML = '';
   try {
@@ -217,23 +276,34 @@ function escapeHtml(str=''){
 
 // ====== Глобальна статистика ======
 async function loadGlobal(){
+  const refreshBtn = document.getElementById('refreshGlobal');
+  refreshBtn?.classList.add('loading');
   const days = Number(document.getElementById('period')?.value || 30);
   const tz = Number(document.getElementById('timezone')?.value || 0);
-  try{
+  try {
     const data = await (await fetch(`/api/stats-global?days=${days}&tz=${tz}`)).json();
     $('#globalKpi').innerHTML = `
       <div class="pill"><strong>QR УСЬОГО</strong>${data.total_qrs}</div>
       <div class="pill"><strong>СКАНУВАНЬ УСЬОГО</strong>${data.total_scans}</div>
       <div class="pill"><strong>УНІКАЛЬНІ</strong>${data.total_unique_visitors}</div>
     `;
-    drawDailyChart('chartGlobalDaily', data.series_daily, 'Усі сканування за днями');
-    drawBarChart('chartTopQrs', data.top_qrs.map(x=>({ label:x.id.slice(0,6), value:x.scan_count })), 'Топ QR за скануваннями');
+    drawDailyChart('chartGlobalDaily', data.series_daily, 'Сканування за днями');
+    drawBarChart('chartTopQrs', data.top_qrs.map(x=>({ label:x.id.slice(0,6), value:x.scan_count })), 'Топ QR');
     drawBarChart('chartCountries', (data.breakdowns?.countries||[]), 'Країни');
     drawBarChart('chartRegions', (data.breakdowns?.regions||[]), 'Регіони');
     drawBarChart('chartDevices', (data.breakdowns?.devices||[]), 'Пристрої');
+    // Оновлюємо лічильники в hero-bar
+    const hkpiQr = document.getElementById('hkpiQr');
+    const hkpiScans = document.getElementById('hkpiScans');
+    const hkpiUniq = document.getElementById('hkpiUniq');
+    if (hkpiQr) hkpiQr.textContent = data.total_qrs;
+    if (hkpiScans) hkpiScans.textContent = data.total_scans;
+    if (hkpiUniq) hkpiUniq.textContent = data.total_unique_visitors;
     lucideInit();
-  }catch(e){
-    $('#globalKpi').innerHTML = 'Помилка завантаження';
+  } catch(e) {
+    $('#globalKpi').innerHTML = '<div class="pill pill-sm" style="grid-column:1/-1"><strong>ПОМИЛКА</strong>Не вдалося завантажити статистику</div>';
+  } finally {
+    refreshBtn?.classList.remove('loading');
   }
 }
 

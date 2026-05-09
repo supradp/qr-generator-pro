@@ -39,18 +39,32 @@
       <div class="live-badge">
         <span class="live-dot"></span>LIVE
       </div>
+      <button class="burger" id="burger" aria-label="Меню">
+        <span></span><span></span><span></span>
+      </button>
     </div>
   </header>
 
-  <main>
+  <nav class="mobile-nav hidden" id="mobileNav">
+    <a href="#create" class="mnav-link"><span class="nav-idx">01</span> Створити QR-код</a>
+    <a href="#global" class="mnav-link"><span class="nav-idx">02</span> Глобальна статистика</a>
+    <a href="#list"   class="mnav-link"><span class="nav-idx">03</span> Мої QR-коди</a>
+  </nav>
 
-    <div class="hero">
-      <div class="hero-content">
-        <p class="hero-eyebrow">QR CODE MANAGEMENT SYSTEM</p>
-        <h2 class="hero-title">GENERATE<br>TRACK<br>ANALYZE</h2>
+  <div class="hero-bar">
+    <div class="hero-bar-inner">
+      <span class="hero-bar-tag">QR CODE MANAGEMENT SYSTEM</span>
+      <div class="hero-bar-kpi">
+        <span class="hkpi-item"><span class="hkpi-val" id="hkpiQr">—</span> QR</span>
+        <span class="hkpi-sep">·</span>
+        <span class="hkpi-item"><span class="hkpi-val" id="hkpiScans">—</span> СКАНІВ</span>
+        <span class="hkpi-sep">·</span>
+        <span class="hkpi-item"><span class="hkpi-val" id="hkpiUniq">—</span> УНІК.</span>
       </div>
-      <div class="hero-bg-text" aria-hidden="true">MOTORNI</div>
     </div>
+  </div>
+
+  <main>
 
     <!-- CREATE -->
     <section id="create" class="section">
@@ -62,7 +76,11 @@
         <form id="generateForm" class="create-form">
           <div class="field">
             <label class="field-label" for="url">ЦІЛЬОВИЙ URL</label>
-            <input id="url" name="url" type="url" placeholder="https://example.com" required class="field-input">
+            <div class="input-wrap">
+              <input id="url" name="url" type="url" placeholder="https://example.com" required class="field-input" autocomplete="url">
+              <button type="button" class="input-clear hidden" id="urlClear" title="Очистити">×</button>
+            </div>
+            <span class="field-err hidden" id="urlError"></span>
           </div>
           <div class="track-row">
             <label class="toggle-wrap">
@@ -87,6 +105,7 @@
             <div class="result-btns">
               <button id="copyLink" class="ghost-btn"><i data-lucide="copy"></i> КОПІЮВАТИ</button>
               <a id="downloadSvg" class="ghost-btn" download="qr.svg"><i data-lucide="download"></i> SVG</a>
+              <button id="newQr" class="ghost-btn"><i data-lucide="plus"></i> НОВИЙ QR</button>
             </div>
           </div>
         </div>
@@ -111,16 +130,31 @@
             <option value="120">Берлін +2</option>
             <option value="-240">Східне -4</option>
           </select>
-          <button id="refreshGlobal" class="icon-btn"><i data-lucide="refresh-ccw"></i></button>
+          <button id="refreshGlobal" class="icon-btn" title="Оновити статистику"><i data-lucide="refresh-ccw"></i></button>
         </div>
       </div>
       <div id="globalKpi" class="kpi-grid"></div>
       <div class="charts-grid">
-        <div class="chart-box wide"><canvas id="chartGlobalDaily"></canvas></div>
-        <div class="chart-box"><canvas id="chartTopQrs"></canvas></div>
-        <div class="chart-box"><canvas id="chartCountries"></canvas></div>
-        <div class="chart-box"><canvas id="chartRegions"></canvas></div>
-        <div class="chart-box"><canvas id="chartDevices"></canvas></div>
+        <div class="chart-box wide">
+          <div class="chart-title">Сканування за днями</div>
+          <canvas id="chartGlobalDaily"></canvas>
+        </div>
+        <div class="chart-box">
+          <div class="chart-title">Топ QR-кодів</div>
+          <canvas id="chartTopQrs"></canvas>
+        </div>
+        <div class="chart-box">
+          <div class="chart-title">Країни</div>
+          <canvas id="chartCountries"></canvas>
+        </div>
+        <div class="chart-box">
+          <div class="chart-title">Регіони</div>
+          <canvas id="chartRegions"></canvas>
+        </div>
+        <div class="chart-box">
+          <div class="chart-title">Пристрої</div>
+          <canvas id="chartDevices"></canvas>
+        </div>
       </div>
     </section>
 
@@ -129,7 +163,7 @@
       <div class="section-hd">
         <span class="section-num">03</span>
         <h2 class="section-title">МОЇ QR-КОДИ</h2>
-        <button id="refresh" class="icon-btn"><i data-lucide="refresh-ccw"></i></button>
+        <button id="refresh" class="icon-btn" title="Оновити список"><i data-lucide="refresh-ccw"></i></button>
       </div>
       <div class="tbl-wrap">
         <table class="data-tbl">
@@ -153,7 +187,7 @@
       <div class="section-hd">
         <span class="section-num">→</span>
         <h2 class="section-title">ДЕТАЛЬНА СТАТИСТИКА</h2>
-        <button id="closeDetails" class="icon-btn"><i data-lucide="x"></i></button>
+        <button id="closeDetails" class="icon-btn" title="Закрити та повернутись до списку"><i data-lucide="x"></i></button>
       </div>
       <div id="statsMeta" class="kpi-grid"></div>
 
@@ -165,24 +199,54 @@
 
       <div class="tab-panel" data-panel="activity">
         <div class="charts-grid">
-          <div class="chart-box wide"><canvas id="chartDaily"></canvas></div>
-          <div class="chart-box"><canvas id="chartHoursQR"></canvas></div>
-          <div class="chart-box"><canvas id="chartWeekdaysQR"></canvas></div>
+          <div class="chart-box wide">
+            <div class="chart-title">Сканування за днями</div>
+            <canvas id="chartDaily"></canvas>
+          </div>
+          <div class="chart-box">
+            <div class="chart-title">По годинах доби</div>
+            <canvas id="chartHoursQR"></canvas>
+          </div>
+          <div class="chart-box">
+            <div class="chart-title">По днях тижня</div>
+            <canvas id="chartWeekdaysQR"></canvas>
+          </div>
         </div>
       </div>
       <div class="tab-panel hidden" data-panel="geo">
         <div class="charts-grid">
-          <div class="chart-box"><canvas id="chartCountriesQR"></canvas></div>
-          <div class="chart-box"><canvas id="chartRegionsQR"></canvas></div>
-          <div class="chart-box wide"><canvas id="chartCitiesQR"></canvas></div>
+          <div class="chart-box">
+            <div class="chart-title">Країни</div>
+            <canvas id="chartCountriesQR"></canvas>
+          </div>
+          <div class="chart-box">
+            <div class="chart-title">Регіони</div>
+            <canvas id="chartRegionsQR"></canvas>
+          </div>
+          <div class="chart-box wide">
+            <div class="chart-title">Міста</div>
+            <canvas id="chartCitiesQR"></canvas>
+          </div>
         </div>
       </div>
       <div class="tab-panel hidden" data-panel="tech">
         <div class="charts-grid">
-          <div class="chart-box"><canvas id="chartDevicesQR"></canvas></div>
-          <div class="chart-box"><canvas id="chartOSQR"></canvas></div>
-          <div class="chart-box"><canvas id="chartBrowsersQR"></canvas></div>
-          <div class="chart-box"><canvas id="chartUA"></canvas></div>
+          <div class="chart-box">
+            <div class="chart-title">Пристрої</div>
+            <canvas id="chartDevicesQR"></canvas>
+          </div>
+          <div class="chart-box">
+            <div class="chart-title">Операційні системи</div>
+            <canvas id="chartOSQR"></canvas>
+          </div>
+          <div class="chart-box">
+            <div class="chart-title">Браузери</div>
+            <canvas id="chartBrowsersQR"></canvas>
+          </div>
+          <div class="chart-box">
+            <div class="chart-title">User-Agent</div>
+            <canvas id="chartUA"></canvas>
+          </div>
         </div>
       </div>
 
