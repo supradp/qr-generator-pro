@@ -6,10 +6,10 @@
   <title>MOTORNI — QR Platform</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@300;400;700&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/styles.css" />
   <link rel="manifest" href="/manifest.webmanifest">
-  <meta name="theme-color" content="#1c1f22" />
+  <meta name="theme-color" content="#09090B" />
   <script defer src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
   <script defer src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
   <script defer src="/app.js"></script>
@@ -22,102 +22,125 @@
   </script>
 </head>
 <body>
-  <div class="bg-gradient"></div>
+  <div class="grid-bg"></div>
 
-  <header class="container header">
-    <h1 class="logo">
-      <span class="brand">MOTORNI</span><span class="sub">QR Platform</span>
-    </h1>
-    <nav class="nav">
-      <a href="#create" class="nav-link">Создать</a>
-      <a href="#global" class="nav-link">Статистика</a>
-      <a href="#list"   class="nav-link">Мои QR</a>
-    </nav>
+  <header class="site-header">
+    <div class="header-inner">
+      <a href="#create" class="logo-wrap">
+        <span class="logo-square"></span>
+        <span class="logo-text">MOTORNI</span>
+        <span class="logo-tag">QR</span>
+      </a>
+      <nav class="nav">
+        <a href="#create" class="nav-link"><span class="nav-idx">01</span>Создать</a>
+        <a href="#global" class="nav-link"><span class="nav-idx">02</span>Статистика</a>
+        <a href="#list"   class="nav-link"><span class="nav-idx">03</span>Мои QR</a>
+      </nav>
+      <div class="live-badge">
+        <span class="live-dot"></span>LIVE
+      </div>
+    </div>
   </header>
 
-  <main class="container">
+  <main>
 
-    <!-- ── Общая статистика ── -->
-    <section id="global" class="card fade-in">
-      <div class="card-head">
-        <h2>Общая статистика</h2>
-        <div>
-          <select id="period" class="btn">
-            <option value="7">7 дней</option>
-            <option value="30" selected>30 дней</option>
-            <option value="60">60 дней</option>
-            <option value="90">90 дней</option>
-          </select>
-          <select id="timezone" class="btn">
-            <option value="0">UTC</option>
-            <option value="180">Europe/Kiev (+3)</option>
-            <option value="120">Europe/Berlin (+2)</option>
-            <option value="-240">US/Eastern (-4)</option>
-          </select>
-          <button id="refreshGlobal" class="btn btn-ghost">
-            <i data-lucide="refresh-ccw"></i> Обновить
+    <div class="hero">
+      <div class="hero-content">
+        <p class="hero-eyebrow">QR CODE MANAGEMENT SYSTEM</p>
+        <h2 class="hero-title">GENERATE<br>TRACK<br>ANALYZE</h2>
+      </div>
+      <div class="hero-bg-text" aria-hidden="true">MOTORNI</div>
+    </div>
+
+    <!-- CREATE -->
+    <section id="create" class="section">
+      <div class="section-hd">
+        <span class="section-num">01</span>
+        <h2 class="section-title">СОЗДАТЬ QR-КОД</h2>
+      </div>
+      <div class="create-card">
+        <form id="generateForm" class="create-form">
+          <div class="field">
+            <label class="field-label" for="url">ЦЕЛЕВОЙ URL</label>
+            <input id="url" name="url" type="url" placeholder="https://example.com" required class="field-input">
+          </div>
+          <div class="track-row">
+            <label class="toggle-wrap">
+              <input type="checkbox" id="tracking" checked class="toggle-input">
+              <span class="toggle-rail"><span class="toggle-thumb"></span></span>
+            </label>
+            <span class="track-label">ОТСЛЕЖИВАНИЕ СКАНИРОВАНИЙ</span>
+          </div>
+          <button class="generate-btn" type="submit">
+            <i data-lucide="qr-code"></i>
+            СГЕНЕРИРОВАТЬ
           </button>
-        </div>
-      </div>
-      <div id="globalKpi" class="stats-meta"></div>
-      <div class="charts">
-        <div class="chart-card"><canvas id="chartGlobalDaily"></canvas></div>
-        <div class="chart-card"><canvas id="chartTopQrs"></canvas></div>
-        <div class="chart-card"><canvas id="chartCountries"></canvas></div>
-        <div class="chart-card"><canvas id="chartRegions"></canvas></div>
-        <div class="chart-card"><canvas id="chartDevices"></canvas></div>
-      </div>
-    </section>
+        </form>
 
-    <!-- ── Создать QR ── -->
-    <section id="create" class="card fade-in">
-      <h2>Создать новый QR-код</h2>
-      <form id="generateForm" class="form">
-        <div class="input-group">
-          <label for="url">URL</label>
-          <input id="url" name="url" type="url" placeholder="https://example.com" required>
-        </div>
-        <div class="switch-group">
-          <label class="switch">
-            <input type="checkbox" id="tracking" checked>
-            <span class="slider"></span>
-          </label>
-          <span>Отслеживание сканирований</span>
-        </div>
-        <button class="btn btn-gradient" type="submit">
-          <i data-lucide="qr-code"></i>
-          Сгенерировать
-        </button>
-      </form>
-
-      <div id="result" class="result hidden">
-        <img id="qrImage" alt="QR" />
-        <div class="result-info">
-          <p><strong>Короткая ссылка:</strong> <a id="shortUrl" href="#" target="_blank"></a></p>
-          <div class="actions">
-            <button id="copyLink" class="btn btn-ghost"><i data-lucide="copy"></i> Копировать ссылку</button>
-            <a id="downloadSvg" class="btn btn-ghost" download="qr.svg"><i data-lucide="download"></i> SVG</a>
+        <div id="result" class="result-panel hidden">
+          <div class="qr-wrap">
+            <img id="qrImage" alt="QR Code" />
+          </div>
+          <div class="result-meta">
+            <p class="result-eyebrow">КОРОТКАЯ ССЫЛКА</p>
+            <a id="shortUrl" href="#" target="_blank" class="result-url"></a>
+            <div class="result-btns">
+              <button id="copyLink" class="ghost-btn"><i data-lucide="copy"></i> КОПИРОВАТЬ</button>
+              <a id="downloadSvg" class="ghost-btn" download="qr.svg"><i data-lucide="download"></i> SVG</a>
+            </div>
           </div>
         </div>
       </div>
     </section>
 
-    <!-- ── Список QR ── -->
-    <section id="list" class="card fade-in">
-      <div class="card-head">
-        <h2>Мои QR-коды</h2>
-        <button id="refresh" class="btn btn-ghost"><i data-lucide="refresh-ccw"></i> Обновить</button>
+    <!-- GLOBAL STATS -->
+    <section id="global" class="section">
+      <div class="section-hd">
+        <span class="section-num">02</span>
+        <h2 class="section-title">ГЛОБАЛЬНАЯ СТАТИСТИКА</h2>
+        <div class="hd-controls">
+          <select id="period" class="ctrl-sel">
+            <option value="7">7Д</option>
+            <option value="30" selected>30Д</option>
+            <option value="60">60Д</option>
+            <option value="90">90Д</option>
+          </select>
+          <select id="timezone" class="ctrl-sel">
+            <option value="0">UTC</option>
+            <option value="180">Kyiv +3</option>
+            <option value="120">Berlin +2</option>
+            <option value="-240">Eastern -4</option>
+          </select>
+          <button id="refreshGlobal" class="icon-btn"><i data-lucide="refresh-ccw"></i></button>
+        </div>
       </div>
-      <div class="table-wrap">
-        <table class="table">
+      <div id="globalKpi" class="kpi-grid"></div>
+      <div class="charts-grid">
+        <div class="chart-box wide"><canvas id="chartGlobalDaily"></canvas></div>
+        <div class="chart-box"><canvas id="chartTopQrs"></canvas></div>
+        <div class="chart-box"><canvas id="chartCountries"></canvas></div>
+        <div class="chart-box"><canvas id="chartRegions"></canvas></div>
+        <div class="chart-box"><canvas id="chartDevices"></canvas></div>
+      </div>
+    </section>
+
+    <!-- LIST -->
+    <section id="list" class="section">
+      <div class="section-hd">
+        <span class="section-num">03</span>
+        <h2 class="section-title">МОИ QR-КОДЫ</h2>
+        <button id="refresh" class="icon-btn"><i data-lucide="refresh-ccw"></i></button>
+      </div>
+      <div class="tbl-wrap">
+        <table class="data-tbl">
           <thead>
             <tr>
               <th>ID</th>
               <th>URL</th>
-              <th>Сканов</th>
-              <th>Уникальные</th>
-              <th>Статус</th>
-              <th>Действия</th>
+              <th>СКАНЫ</th>
+              <th>УНИК.</th>
+              <th>СТАТУС</th>
+              <th>ДЕЙСТВИЯ</th>
             </tr>
           </thead>
           <tbody id="qrTable"></tbody>
@@ -125,55 +148,54 @@
       </div>
     </section>
 
-    <!-- ── Детальная статистика ── -->
-    <section id="details" class="card fade-in hidden">
-      <div class="card-head">
-        <h2>Статистика QR</h2>
-        <button id="closeDetails" class="btn btn-ghost"><i data-lucide="x"></i> Закрыть</button>
+    <!-- DETAILS -->
+    <section id="details" class="section hidden">
+      <div class="section-hd">
+        <span class="section-num">→</span>
+        <h2 class="section-title">ДЕТАЛЬНАЯ СТАТИСТИКА</h2>
+        <button id="closeDetails" class="icon-btn"><i data-lucide="x"></i></button>
       </div>
-      <div id="statsMeta" class="stats-meta"></div>
+      <div id="statsMeta" class="kpi-grid"></div>
 
       <div class="tabs">
-        <button class="tab-btn active" data-tab="activity">Активность</button>
-        <button class="tab-btn" data-tab="geo">География</button>
-        <button class="tab-btn" data-tab="tech">Технологии</button>
+        <button class="tab-btn active" data-tab="activity">АКТИВНОСТЬ</button>
+        <button class="tab-btn" data-tab="geo">ГЕОГРАФИЯ</button>
+        <button class="tab-btn" data-tab="tech">ТЕХНОЛОГИИ</button>
       </div>
 
       <div class="tab-panel" data-panel="activity">
-        <div class="charts">
-          <div class="chart-card"><canvas id="chartDaily"></canvas></div>
-          <div class="chart-card"><canvas id="chartHoursQR"></canvas></div>
-          <div class="chart-card"><canvas id="chartWeekdaysQR"></canvas></div>
+        <div class="charts-grid">
+          <div class="chart-box wide"><canvas id="chartDaily"></canvas></div>
+          <div class="chart-box"><canvas id="chartHoursQR"></canvas></div>
+          <div class="chart-box"><canvas id="chartWeekdaysQR"></canvas></div>
         </div>
       </div>
-
       <div class="tab-panel hidden" data-panel="geo">
-        <div class="charts">
-          <div class="chart-card"><canvas id="chartCountriesQR"></canvas></div>
-          <div class="chart-card"><canvas id="chartRegionsQR"></canvas></div>
-          <div class="chart-card"><canvas id="chartCitiesQR"></canvas></div>
+        <div class="charts-grid">
+          <div class="chart-box"><canvas id="chartCountriesQR"></canvas></div>
+          <div class="chart-box"><canvas id="chartRegionsQR"></canvas></div>
+          <div class="chart-box wide"><canvas id="chartCitiesQR"></canvas></div>
         </div>
       </div>
-
       <div class="tab-panel hidden" data-panel="tech">
-        <div class="charts">
-          <div class="chart-card"><canvas id="chartDevicesQR"></canvas></div>
-          <div class="chart-card"><canvas id="chartOSQR"></canvas></div>
-          <div class="chart-card"><canvas id="chartBrowsersQR"></canvas></div>
-          <div class="chart-card"><canvas id="chartUA"></canvas></div>
+        <div class="charts-grid">
+          <div class="chart-box"><canvas id="chartDevicesQR"></canvas></div>
+          <div class="chart-box"><canvas id="chartOSQR"></canvas></div>
+          <div class="chart-box"><canvas id="chartBrowsersQR"></canvas></div>
+          <div class="chart-box"><canvas id="chartUA"></canvas></div>
         </div>
       </div>
 
-      <div class="table-wrap">
-        <table class="table">
+      <div class="tbl-wrap" style="margin-top:24px">
+        <table class="data-tbl">
           <thead>
             <tr>
-              <th>Время</th>
-              <th>Страна</th>
-              <th>Регион</th>
-              <th>Город</th>
+              <th>ВРЕМЯ</th>
+              <th>СТРАНА</th>
+              <th>РЕГИОН</th>
+              <th>ГОРОД</th>
               <th>IP</th>
-              <th>User-Agent</th>
+              <th>USER-AGENT</th>
             </tr>
           </thead>
           <tbody id="scanTable"></tbody>
@@ -181,7 +203,11 @@
       </div>
     </section>
 
-    <footer class="footer">MOTORNI &copy; 2025</footer>
+    <footer class="site-footer">
+      <span class="footer-logo">MOTORNI</span>
+      <span class="footer-info">© 2025 · QR PLATFORM</span>
+    </footer>
+
   </main>
 
   <div id="toast" class="toast hidden">

@@ -13,6 +13,12 @@ function lucideInit(){ if (window.lucide) window.lucide.createIcons(); }
 
 document.addEventListener('DOMContentLoaded', () => {
   lucideInit();
+  if (window.Chart) {
+    Chart.defaults.color = '#666666';
+    Chart.defaults.borderColor = 'rgba(255,255,255,0.06)';
+    Chart.defaults.font.family = "'JetBrains Mono', monospace";
+    Chart.defaults.font.size = 10;
+  }
 
   // Плавная прокрутка
   $all('a[href^="#"]').forEach(a => a.addEventListener('click', e => {
@@ -169,10 +175,10 @@ async function openStats(id){
     const tz = Number(document.getElementById('timezone')?.value || 0);
     const data = await (await fetch(`/api/stats/${id}?days=${days}&tz=${tz}`)).json();
     const meta = `
-      <div class="pill"><strong>ID:</strong> ${data.id}</div>
-      <div class="pill"><strong>Всего сканов:</strong> ${data.scan_count}</div>
-      <div class="pill"><strong>Уникальные посетители:</strong> ${data.unique_visitors}</div>
-      <div class="pill" style="grid-column:1/-1"><strong>Оригинальный URL:</strong> <a href="${data.original_url}" target="_blank">${escapeHtml(data.original_url)}</a></div>
+      <div class="pill pill-sm"><strong>ID</strong><code>${data.id.slice(0,12)}…</code></div>
+      <div class="pill"><strong>ВСЕГО СКАНОВ</strong>${data.scan_count}</div>
+      <div class="pill"><strong>УНИКАЛЬНЫЕ</strong>${data.unique_visitors}</div>
+      <div class="pill pill-sm" style="grid-column:1/-1"><strong>URL</strong><a href="${data.original_url}" target="_blank">${escapeHtml(data.original_url)}</a></div>
     `;
     $('#statsMeta').innerHTML = meta;
 
@@ -220,9 +226,9 @@ async function loadGlobal(){
   try{
     const data = await (await fetch(`/api/stats-global?days=${days}&tz=${tz}`)).json();
     $('#globalKpi').innerHTML = `
-      <div class="pill"><strong>QR всего:</strong> ${data.total_qrs}</div>
-      <div class="pill"><strong>Сканы всего:</strong> ${data.total_scans}</div>
-      <div class="pill"><strong>Уникальные посетители:</strong> ${data.total_unique_visitors}</div>
+      <div class="pill"><strong>QR ВСЕГО</strong>${data.total_qrs}</div>
+      <div class="pill"><strong>СКАНЫ ВСЕГО</strong>${data.total_scans}</div>
+      <div class="pill"><strong>УНИКАЛЬНЫЕ</strong>${data.total_unique_visitors}</div>
     `;
     drawDailyChart('chartGlobalDaily', data.series_daily, 'Все сканы по дням');
     // Топ QR
@@ -250,8 +256,8 @@ function drawDailyChart(canvasId, series, label){
   const data = series.map(x=>x.count);
   charts[canvasId] = new Chart(ctx, {
     type:'line',
-    data:{ labels, datasets:[{ label, data, tension:.3, borderColor:'#009d46', backgroundColor:'rgba(0,157,70,.15)', fill:true }] },
-    options:{ plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, ticks:{ precision:0 } } } }
+    data:{ labels, datasets:[{ label, data, tension:.4, borderColor:'#00FF88', backgroundColor:'rgba(0,255,136,0.07)', fill:true, pointBackgroundColor:'#00FF88', pointRadius:3 }] },
+    options:{ plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, ticks:{ precision:0 }, grid:{ color:'rgba(255,255,255,0.05)' } }, x:{ grid:{ color:'rgba(255,255,255,0.05)' } } } }
   });
 }
 function drawBarChart(canvasId, items, label){
@@ -260,8 +266,8 @@ function drawBarChart(canvasId, items, label){
   const data = items.map(i=>i.value);
   charts[canvasId] = new Chart(ctx, {
     type:'bar',
-    data:{ labels, datasets:[{ label, data, backgroundColor:'rgba(0,157,70,.55)', borderColor:'#009d46' }] },
-    options:{ plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, ticks:{ precision:0 } } } }
+    data:{ labels, datasets:[{ label, data, backgroundColor:'rgba(0,255,136,0.3)', borderColor:'#00FF88', borderWidth:1, borderRadius:3 }] },
+    options:{ plugins:{ legend:{ display:false } }, scales:{ y:{ beginAtZero:true, ticks:{ precision:0 }, grid:{ color:'rgba(255,255,255,0.05)' } }, x:{ grid:{ color:'rgba(255,255,255,0.04)' } } } }
   });
 }
 function aggregateBy(arr, keyFn){
