@@ -21,6 +21,12 @@ async function initDB() {
   initPromise = (async () => {
     const p = getPool();
     await p.query(`
+      CREATE TABLE IF NOT EXISTS folders (
+        id         TEXT PRIMARY KEY,
+        name       TEXT NOT NULL,
+        created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+      );
+
       CREATE TABLE IF NOT EXISTS qr_codes (
         id          TEXT PRIMARY KEY,
         original_url TEXT NOT NULL,
@@ -29,7 +35,8 @@ async function initDB() {
         qr_image    TEXT,
         qr_image_png TEXT,
         qr_image_svg TEXT,
-        tracking    BOOLEAN NOT NULL DEFAULT TRUE
+        tracking    BOOLEAN NOT NULL DEFAULT TRUE,
+        folder_id   TEXT REFERENCES folders(id) ON DELETE SET NULL
       );
 
       CREATE TABLE IF NOT EXISTS scans (
@@ -51,6 +58,11 @@ async function initDB() {
       CREATE INDEX IF NOT EXISTS idx_scans_qr_id      ON scans(qr_id);
       CREATE INDEX IF NOT EXISTS idx_scans_scanned_at ON scans(scanned_at);
     `);
+
+    // Migrate existing DB: add folder_id if not present
+    await p.query(`
+      ALTER TABLE qr_codes ADD COLUMN IF NOT EXISTS folder_id TEXT REFERENCES folders(id) ON DELETE SET NULL;
+    `).catch(() => {});
   })();
   return initPromise;
 }

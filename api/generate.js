@@ -7,7 +7,7 @@ module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
 
   try {
-    const { url, tracking = true } = req.body || {};
+    const { url, tracking = true, folder_id = null } = req.body || {};
 
     // Перевірка URL
     try {
@@ -24,7 +24,7 @@ module.exports = async (req, res) => {
     const qr_image_png = await QRCode.toDataURL(redirectUrl, { errorCorrectionLevel: 'H', width: 1024, margin: 2 });
     const qr_image_svg = await QRCode.toString(redirectUrl, { type: 'svg', errorCorrectionLevel: 'H', width: 1024, margin: 2 });
 
-    const record = await createQR({ id, original_url: url, qr_image_png, qr_image_svg, tracking: Boolean(tracking) });
+    const record = await createQR({ id, original_url: url, qr_image_png, qr_image_svg, tracking: Boolean(tracking), folder_id: folder_id || null });
 
     return res.status(201).json({
       ...record,

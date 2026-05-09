@@ -89,6 +89,12 @@
             </label>
             <span class="track-label">ВІДСТЕЖЕННЯ СКАНУВАНЬ</span>
           </div>
+          <div class="field">
+            <label class="field-label" for="qrFolder">ПАПКА</label>
+            <select id="qrFolder" class="field-input field-select">
+              <option value="">— Без папки —</option>
+            </select>
+          </div>
           <button class="generate-btn" type="submit">
             <i data-lucide="qr-code"></i>
             ЗГЕНЕРУВАТИ
@@ -165,6 +171,22 @@
         <h2 class="section-title">МОЇ QR-КОДИ</h2>
         <button id="refresh" class="icon-btn" title="Оновити список"><i data-lucide="refresh-ccw"></i></button>
       </div>
+
+      <!-- Folder tabs -->
+      <div class="folder-bar" id="folderBar">
+        <button class="folder-tab active" data-folder-id=""><i data-lucide="layers"></i> Всі <span class="folder-count" id="folderCountAll"></span></button>
+        <!-- dynamic folder tabs injected here -->
+        <button class="folder-tab folder-tab-add" id="addFolderBtn" title="Нова папка">
+          <i data-lucide="folder-plus"></i> Нова папка
+        </button>
+      </div>
+      <!-- Inline new-folder input (hidden by default) -->
+      <div class="folder-create-row hidden" id="folderCreateRow">
+        <input id="folderNameInput" class="folder-name-input" type="text" placeholder="Назва папки…" maxlength="60">
+        <button class="folder-create-confirm" id="folderCreateConfirm"><i data-lucide="check"></i></button>
+        <button class="folder-create-cancel" id="folderCreateCancel"><i data-lucide="x"></i></button>
+      </div>
+
       <div class="tbl-wrap">
         <table class="data-tbl">
           <thead>
@@ -173,6 +195,7 @@
               <th>URL</th>
               <th>СКАНИ</th>
               <th>УНІК.</th>
+              <th>ПАПКА</th>
               <th>СТАТУС</th>
               <th>ДІЇ</th>
             </tr>

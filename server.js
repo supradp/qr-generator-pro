@@ -3,7 +3,7 @@ const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
 const cors = require('cors');
-const { createQR, getAllQRs, getQR, deleteQR, addScan, getStats, getGlobalStats } = require('./api/_lib/store');
+const { createQR, getAllQRs, getQR, deleteQR, updateQR, addScan, getStats, getGlobalStats, createFolder, getAllFolders, deleteFolder } = require('./api/_lib/store');
 const { initDB } = require('./api/_lib/db');
 const QRCode = require('qrcode');
 const { v4: uuidv4 } = require('uuid');
@@ -55,8 +55,27 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
+app.get('/api/folders', async (req, res) => {
+  res.json(await getAllFolders());
+});
+
+app.post('/api/folders', async (req, res) => {
+  const { name } = req.body || {};
+  if (!name || !name.trim()) return res.status(400).json({ error: 'Назва папки обов\'язкова' });
+  if (name.trim().length > 60) return res.status(400).json({ error: 'Назва надто довга' });
+  const folder = await createFolder({ name });
+  res.status(201).json(folder);
+});
+
+app.delete('/api/folders/:folderId', async (req, res) => {
+  const folders = await getAllFolders();
+  if (!folders.some(f => f.id === req.params.folderId)) return res.status(404).json({ error: 'Not found' });
+  await deleteFolder(req.params.folderId);
+  res.status(204).end();
+});
+
 app.post('/api/generate', async (req, res) => {
-  const { url, tracking = true } = req.body || {};
+  const { url, tracking = true, folder_id = null } = req.body || {};
   try { new URL(url); } catch {
     return res.status(400).json({ error: 'Невірний URL' });
   }
@@ -64,7 +83,7 @@ app.post('/api/generate', async (req, res) => {
   const redirectUrl = `${req.protocol}://${req.get('host')}/redirect/${id}`;
   const qr_image_png = await QRCode.toDataURL(redirectUrl, { errorCorrectionLevel: 'H', width: 1024, margin: 2 });
   const qr_image_svg = await QRCode.toString(redirectUrl, { type: 'svg', errorCorrectionLevel: 'H', width: 1024, margin: 2 });
-  const record = await createQR({ id, original_url: url, qr_image_png, qr_image_svg, tracking });
+  const record = await createQR({ id, original_url: url, qr_image_png, qr_image_svg, tracking, folder_id: folder_id || null });
   res.status(201).json({ ...record, short_url: redirectUrl });
 });
 
@@ -125,6 +144,14 @@ app.delete('/api/qr-codes/:qrId', async (req, res) => {
   if (!exists) return res.status(404).json({ error: 'Not found' });
   await deleteQR(req.params.qrId);
   res.status(204).end();
+});
+
+app.patch('/api/qr-codes/:qrId', async (req, res) => {
+  const exists = await getQR(req.params.qrId);
+  if (!exists) return res.status(404).json({ error: 'Not found' });
+  const { folder_id } = req.body || {};
+  const updated = await updateQR(req.params.qrId, { folder_id: folder_id || null });
+  res.json(updated);
 });
 
 const PORT = process.env.PORT || 3000;

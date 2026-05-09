@@ -2,6 +2,10 @@
 const $ = (sel) => document.querySelector(sel);
 const $all = (sel) => Array.from(document.querySelectorAll(sel));
 
+// Folder state
+let allFolders = [];
+let currentFolderId = ''; // '' = show all
+
 const toast = (msg) => {
   const box = $('#toast');
   $('#toastMsg').textContent = msg;
@@ -65,11 +69,26 @@ document.addEventListener('DOMContentLoaded', () => {
     if (el){ e.preventDefault(); el.scrollIntoView({ behavior:'smooth' }); }
   }));
 
+  // Папки: ініціалізація вкладок
+  $('#addFolderBtn')?.addEventListener('click', () => {
+    $('#folderCreateRow')?.classList.remove('hidden');
+    $('#folderNameInput')?.focus();
+  });
+  $('#folderCreateCancel')?.addEventListener('click', hideFolderCreate);
+  $('#folderCreateConfirm')?.addEventListener('click', submitNewFolder);
+  $('#folderNameInput')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') submitNewFolder();
+    if (e.key === 'Escape') hideFolderCreate();
+  });
+
+  loadFolders();
+
   // Генерація
   $('#generateForm').addEventListener('submit', async (e) => {
     e.preventDefault();
     const url = $('#url').value.trim();
     const tracking = $('#tracking').checked;
+    const folder_id = $('#qrFolder')?.value || null;
 
     try { new URL(url); } catch {
       if (urlError) { urlError.textContent = 'Введіть коректний URL (починається з https://)'; urlError.classList.remove('hidden'); }
@@ -81,7 +100,7 @@ document.addEventListener('DOMContentLoaded', () => {
     try {
       const res = await fetch('/api/generate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, tracking }),
+        body: JSON.stringify({ url, tracking, folder_id: folder_id || null }),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Помилка');
@@ -117,7 +136,7 @@ document.addEventListener('DOMContentLoaded', () => {
     toast('Посилання скопійовано');
   });
 
-  $('#refresh').addEventListener('click', loadList);
+  $('#refresh').addEventListener('click', loadFolders);
   $('#closeDetails').addEventListener('click', () => {
     $('#details').classList.add('hidden');
     document.getElementById('list')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -151,21 +170,148 @@ document.addEventListener('DOMContentLoaded', () => {
   if (tzSel) tzSel.addEventListener('change', loadGlobal);
 
   loadGlobal();
-  loadList();
+  // loadList is called by loadFolders after folders are fetched
 });
+
+
+// ====== Папки ======
+function hideFolderCreate() {
+  $('#folderCreateRow')?.classList.add('hidden');
+  if ($('#folderNameInput')) $('#folderNameInput').value = '';
+}
+
+async function submitNewFolder() {
+  const input = $('#folderNameInput');
+  const name = input?.value?.trim();
+  if (!name) { input?.focus(); return; }
+  try {
+    const res = await fetch('/api/folders', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ name }),
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Помилка');
+    hideFolderCreate();
+    await loadFolders();
+    toast(`Папку «${name}» створено`);
+  } catch (err) { toast(err.message); }
+}
+
+async function loadFolders() {
+  try {
+    const res = await fetch('/api/folders');
+    allFolders = await res.json();
+  } catch { allFolders = []; }
+  renderFolderTabs();
+  populateFolderSelects();
+  loadList();
+}
+
+function renderFolderTabs() {
+  const bar = $('#folderBar');
+  if (!bar) return;
+
+  // Remove existing dynamic tabs (keep first "Всі" and last "+ Нова папка")
+  bar.querySelectorAll('.folder-tab-dynamic').forEach(el => el.remove());
+
+  const addBtn = $('#addFolderBtn');
+
+  allFolders.forEach(f => {
+    const tab = document.createElement('button');
+    tab.className = 'folder-tab folder-tab-dynamic' + (currentFolderId === f.id ? ' active' : '');
+    tab.setAttribute('data-folder-id', f.id);
+    tab.innerHTML = `<i data-lucide="folder"></i> ${escapeHtml(f.name)} <button class="folder-tab-del" data-folder-del="${f.id}" title="Видалити папку"><i data-lucide="x"></i></button>`;
+    bar.insertBefore(tab, addBtn);
+  });
+
+  // Update "Всі" active state
+  const allTab = bar.querySelector('[data-folder-id=""]');
+  if (allTab) allTab.classList.toggle('active', currentFolderId === '');
+
+  lucideInit();
+
+  // Tab click delegation
+  bar.onclick = (e) => {
+    const delBtn = e.target.closest('[data-folder-del]');
+    if (delBtn) { e.stopPropagation(); onDeleteFolder(delBtn.getAttribute('data-folder-del')); return; }
+    const tab = e.target.closest('.folder-tab[data-folder-id]');
+    if (!tab || tab.id === 'addFolderBtn') return;
+    currentFolderId = tab.getAttribute('data-folder-id');
+    bar.querySelectorAll('.folder-tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+    loadList();
+  };
+}
+
+function populateFolderSelects() {
+  const sel = $('#qrFolder');
+  if (!sel) return;
+  const current = sel.value;
+  sel.innerHTML = '<option value="">— Без папки —</option>';
+  allFolders.forEach(f => {
+    const opt = document.createElement('option');
+    opt.value = f.id;
+    opt.textContent = f.name;
+    if (f.id === current) opt.selected = true;
+    sel.appendChild(opt);
+  });
+}
+
+async function onDeleteFolder(folderId) {
+  const folder = allFolders.find(f => f.id === folderId);
+  if (!folder) return;
+  if (!confirm(`Видалити папку «${folder.name}»?\nQR-коди залишаться, але будуть поза папками.`)) return;
+  const res = await fetch(`/api/folders/${folderId}`, { method: 'DELETE' });
+  if (res.status === 204) {
+    if (currentFolderId === folderId) currentFolderId = '';
+    await loadFolders();
+    loadList();
+    toast(`Папку «${folder.name}» видалено`);
+  } else {
+    const j = await res.json().catch(() => ({}));
+    toast(j.error || 'Помилка видалення');
+  }
+}
+
+async function moveQRToFolder(qrId, folderId) {
+  const res = await fetch(`/api/qr-codes/${qrId}`, {
+    method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ folder_id: folderId || null }),
+  });
+  if (res.ok) {
+    const folderName = folderId ? (allFolders.find(f => f.id === folderId)?.name || '') : '';
+    toast(folderId ? `Переміщено до «${folderName}»` : 'Видалено з папки');
+    loadList();
+  } else {
+    const j = await res.json().catch(() => ({}));
+    toast(j.error || 'Помилка переміщення');
+  }
+}
 
 async function loadList(){
   const tbody = $('#qrTable');
   const refreshBtn = $('#refresh');
   refreshBtn?.classList.add('loading');
-  tbody.innerHTML = '<tr><td colspan="6" class="tbl-center"><div class="loading-dots"><span></span><span></span><span></span></div></td></tr>';
+  tbody.innerHTML = '<tr><td colspan="7" class="tbl-center"><div class="loading-dots"><span></span><span></span><span></span></div></td></tr>';
   try {
     const res = await fetch('/api/qr-codes');
-    const arr = await res.json();
-    if (!Array.isArray(arr)) throw new Error('Помилка завантаження');
+    const allArr = await res.json();
+    if (!Array.isArray(allArr)) throw new Error('Помилка завантаження');
+
+    // Update "Всі" counter
+    const countAllEl = $('#folderCountAll');
+    if (countAllEl) countAllEl.textContent = allArr.length ? `(${allArr.length})` : '';
+
+    // Filter by active folder
+    const arr = currentFolderId
+      ? allArr.filter(x => x.folder_id === currentFolderId)
+      : allArr;
 
     if (arr.length === 0) {
-      tbody.innerHTML = '<tr><td colspan="6" class="tbl-center"><div class="empty-state"><i data-lucide="qr-code"></i><p>QR-КОДІВ ЩЕ НЕМАЄ</p><a href="#create" class="ghost-btn"><i data-lucide="plus"></i> СТВОРИТИ ПЕРШИЙ</a></div></td></tr>';
+      const msg = currentFolderId
+        ? 'В ЦІЙ ПАПЦІ ЩЕ НЕМАЄ QR-КОДІВ'
+        : 'QR-КОДІВ ЩЕ НЕМАЄ';
+      tbody.innerHTML = `<tr><td colspan="7" class="tbl-center"><div class="empty-state"><i data-lucide="qr-code"></i><p>${msg}</p><a href="#create" class="ghost-btn"><i data-lucide="plus"></i> СТВОРИТИ ПЕРШИЙ</a></div></td></tr>`;
       lucideInit();
       return;
     }
@@ -177,17 +323,31 @@ async function loadList(){
         uniques = st.unique_visitors || 0;
       } catch {}
       const svgHref = x.qr_image_svg ? `data:image/svg+xml;utf8,${encodeURIComponent(x.qr_image_svg)}` : '';
+      const folderCell = x.folder_name
+        ? `<span class="folder-badge"><i data-lucide="folder"></i> ${escapeHtml(x.folder_name)}</span>`
+        : `<span class="folder-badge folder-badge-none">—</span>`;
+
+      const folderOptions = allFolders.map(f =>
+        `<option value="${f.id}" ${x.folder_id === f.id ? 'selected' : ''}>${escapeHtml(f.name)}</option>`
+      ).join('');
+
       return `<tr>
         <td><code>${x.id.slice(0,8)}</code></td>
         <td class="url-cell"><a href="${x.original_url}" target="_blank" title="${escapeHtml(x.original_url)}">${escapeHtml(x.original_url)}</a></td>
         <td>${x.scan_count || 0}</td>
         <td>${uniques}</td>
+        <td class="folder-cell">
+          ${folderCell}
+          <select class="folder-move-sel" data-qr-id="${x.id}">
+            <option value="">— Без папки —</option>
+            ${folderOptions}
+          </select>
+        </td>
         <td><span class="status ${String(x.tracking)!=='false'?'on':''}">${String(x.tracking)!=='false'?'Відстежується':'Без трекінгу'}</span></td>
         <td class="actions">
           <button class="btn btn-ghost" data-act="stats" data-id="${x.id}"><i data-lucide="bar-chart-3"></i> Статистика</button>
           <a class="btn btn-ghost" href="/redirect/${x.id}" target="_blank"><i data-lucide="link"></i> Відкрити</a>
-          <!-- <a class=\"btn btn-ghost\" href=\"${x.qr_image_png || x.qr_image}\" download=\"qr-${x.id}.png\"><i data-lucide=\"download\"></i> PNG</a> -->
-          ${x.qr_image_svg ? `<a class=\"btn btn-ghost\" href=\"${svgHref}\" download=\"qr-${x.id}.svg\"><i data-lucide=\"download\"></i> SVG</a>` : ''}
+          ${x.qr_image_svg ? `<a class="btn btn-ghost" href="${svgHref}" download="qr-${x.id}.svg"><i data-lucide="download"></i> SVG</a>` : ''}
           <button class="btn btn-ghost" data-act="delete" data-id="${x.id}"><i data-lucide="trash-2"></i> Видалити</button>
         </td>
       </tr>`;
@@ -196,7 +356,14 @@ async function loadList(){
     tbody.innerHTML = rows.join('');
     lucideInit();
 
-    // Delegation
+    // Move-to-folder select
+    tbody.querySelectorAll('.folder-move-sel').forEach(sel => {
+      sel.addEventListener('change', () => {
+        moveQRToFolder(sel.getAttribute('data-qr-id'), sel.value);
+      });
+    });
+
+    // Delegation for buttons
     tbody.addEventListener('click', async (e)=>{
       const btn = e.target.closest('button');
       if (!btn) return;
@@ -207,7 +374,7 @@ async function loadList(){
     }, { once: true });
 
   } catch (e) {
-    tbody.innerHTML = '<tr><td colspan="6" class="tbl-center"><div class="empty-state"><p>ПОМИЛКА ЗАВАНТАЖЕННЯ</p></div></td></tr>';
+    tbody.innerHTML = '<tr><td colspan="7" class="tbl-center"><div class="empty-state"><p>ПОМИЛКА ЗАВАНТАЖЕННЯ</p></div></td></tr>';
   } finally {
     refreshBtn?.classList.remove('loading');
     lucideInit();

@@ -596,3 +596,145 @@ td.actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
   .data-tbl th:nth-child(4), .data-tbl td:nth-child(4) { display: none; }
   .url-cell { max-width: 160px; }
 }
+
+/* ── FOLDERS ── */
+.field-select {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2300FF88' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  cursor: pointer;
+}
+.field-select option { background: var(--surface2); color: var(--text); }
+
+.folder-bar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 16px;
+  align-items: center;
+}
+.folder-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border: 1px solid var(--border);
+  border-radius: 20px;
+  background: transparent;
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.72rem;
+  letter-spacing: 1px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+  white-space: nowrap;
+}
+.folder-tab svg { width: 13px; height: 13px; flex-shrink: 0; }
+.folder-tab:hover { border-color: var(--accent-glow); color: var(--text); }
+.folder-tab.active {
+  border-color: var(--accent);
+  color: var(--accent);
+  background: var(--accent-dim);
+}
+.folder-tab-add {
+  border-style: dashed;
+  color: var(--muted);
+}
+.folder-tab-add:hover { color: var(--accent); border-color: var(--accent-glow); }
+
+.folder-count { font-size: 0.65rem; opacity: 0.6; }
+
+.folder-tab-del {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px; height: 16px;
+  border: none;
+  background: transparent;
+  color: currentColor;
+  cursor: pointer;
+  opacity: 0.45;
+  padding: 0;
+  border-radius: 50%;
+  transition: opacity 0.15s, background 0.15s;
+  margin-left: 2px;
+  flex-shrink: 0;
+}
+.folder-tab-del:hover { opacity: 1; background: rgba(255,255,255,0.1); }
+.folder-tab-del svg { width: 10px; height: 10px; }
+
+.folder-create-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.folder-name-input {
+  background: var(--surface2);
+  border: 1px solid var(--accent-glow);
+  border-radius: 8px;
+  color: var(--text);
+  padding: 6px 12px;
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.78rem;
+  outline: none;
+  width: 220px;
+}
+.folder-name-input:focus { border-color: var(--accent); }
+.folder-create-confirm,
+.folder-create-cancel {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: transparent;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+  color: var(--text);
+}
+.folder-create-confirm svg, .folder-create-cancel svg { width: 14px; height: 14px; }
+.folder-create-confirm:hover { border-color: var(--accent); background: var(--accent-dim); color: var(--accent); }
+.folder-create-cancel:hover { border-color: rgba(255,60,60,0.4); background: rgba(255,60,60,0.08); color: #ff6b6b; }
+
+.folder-cell {
+  white-space: nowrap;
+  vertical-align: middle;
+}
+.folder-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.7rem;
+  color: var(--accent);
+  background: var(--accent-dim);
+  border: 1px solid var(--accent-glow);
+  border-radius: 12px;
+  padding: 2px 8px;
+  margin-bottom: 4px;
+  white-space: nowrap;
+}
+.folder-badge svg { width: 11px; height: 11px; }
+.folder-badge-none { color: var(--muted); background: transparent; border-color: transparent; }
+
+.folder-move-sel {
+  display: block;
+  appearance: none;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 0.68rem;
+  padding: 3px 24px 3px 8px;
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%23666' stroke-width='2'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 6px center;
+  transition: border-color 0.15s;
+  max-width: 140px;
+}
+.folder-move-sel:hover, .folder-move-sel:focus { border-color: var(--accent-glow); outline: none; color: var(--text); }
+.folder-move-sel option { background: var(--surface2); color: var(--text); }

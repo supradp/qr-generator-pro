@@ -119,31 +119,65 @@ function rowToScan(r) {
 }
 
 // ────────────────────────────────────────────────────────────
+//  CRUD для папок
+// ────────────────────────────────────────────────────────────
+async function createFolder({ id = uuidv4(), name }) {
+  await initDB();
+  const created_at = new Date().toISOString();
+  await getPool().query(
+    `INSERT INTO folders (id, name, created_at) VALUES ($1, $2, $3)`,
+    [id, name.trim(), created_at],
+  );
+  return { id, name: name.trim(), created_at };
+}
+
+async function getAllFolders() {
+  await initDB();
+  const { rows } = await getPool().query('SELECT * FROM folders ORDER BY created_at ASC');
+  return rows;
+}
+
+async function deleteFolder(id) {
+  await initDB();
+  await getPool().query('DELETE FROM folders WHERE id = $1', [id]);
+}
+
+// ────────────────────────────────────────────────────────────
 //  CRUD для QR-кодов
 // ────────────────────────────────────────────────────────────
-async function createQR({ id = uuidv4(), original_url, qr_image, qr_image_png, qr_image_svg, tracking = true }) {
+async function createQR({ id = uuidv4(), original_url, qr_image, qr_image_png, qr_image_svg, tracking = true, folder_id = null }) {
   await initDB();
   const pool = getPool();
   const created_at = new Date().toISOString();
   const img    = qr_image || qr_image_png || null;
   const imgPng = qr_image_png || qr_image || null;
   await pool.query(
-    `INSERT INTO qr_codes (id, original_url, created_at, scan_count, qr_image, qr_image_png, qr_image_svg, tracking)
-     VALUES ($1, $2, $3, 0, $4, $5, $6, $7)`,
-    [id, original_url, created_at, img, imgPng, qr_image_svg || null, tracking],
+    `INSERT INTO qr_codes (id, original_url, created_at, scan_count, qr_image, qr_image_png, qr_image_svg, tracking, folder_id)
+     VALUES ($1, $2, $3, 0, $4, $5, $6, $7, $8)`,
+    [id, original_url, created_at, img, imgPng, qr_image_svg || null, tracking, folder_id || null],
   );
-  return { id, original_url, created_at, scan_count: 0, qr_image: img, qr_image_png: imgPng, qr_image_svg: qr_image_svg || null, tracking };
+  return { id, original_url, created_at, scan_count: 0, qr_image: img, qr_image_png: imgPng, qr_image_svg: qr_image_svg || null, tracking, folder_id: folder_id || null };
 }
 
 async function getQR(id) {
   await initDB();
-  const { rows } = await getPool().query('SELECT * FROM qr_codes WHERE id = $1', [id]);
+  const { rows } = await getPool().query(`
+    SELECT q.*, f.name AS folder_name
+    FROM qr_codes q
+    LEFT JOIN folders f ON q.folder_id = f.id
+    WHERE q.id = $1
+  `, [id]);
   return rows.length ? rowToQR(rows[0]) : null;
 }
 
 async function getAllQRs() {
   await initDB();
-  const { rows } = await getPool().query('SELECT * FROM qr_codes ORDER BY created_at DESC');
+  const { rows } = await getPool().query(`
+    SELECT q.*, f.name AS folder_name
+    FROM qr_codes q
+    LEFT JOIN folders f ON q.folder_id = f.id
+    ORDER BY q.created_at DESC
+  `);
   return rows.map(rowToQR);
 }
 
@@ -238,4 +272,4 @@ async function getGlobalStats({ days = 30, tzOffset = 0 } = {}) {
   return { total_qrs, total_scans, total_unique_visitors, series_daily, top_qrs, breakdowns };
 }
 
-module.exports = { createQR, getQR, getAllQRs, updateQR, deleteQR, addScan, getStats, getGlobalStats };
+module.exports = { createQR, getQR, getAllQRs, updateQR, deleteQR, addScan, getStats, getGlobalStats, createFolder, getAllFolders, deleteFolder };
