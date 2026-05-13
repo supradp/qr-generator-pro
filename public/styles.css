@@ -739,6 +739,17 @@ td.actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 .folder-move-sel:hover, .folder-move-sel:focus { border-color: var(--accent-glow); outline: none; color: var(--text); }
 .folder-move-sel option { background: var(--surface2); color: var(--text); }
 
+/* ── LOGOUT BUTTON ── */
+.logout-btn {
+  display: flex; align-items: center; justify-content: center;
+  width: 34px; height: 34px; flex-shrink: 0;
+  background: transparent; border: 1px solid var(--border);
+  border-radius: 6px; color: var(--muted); cursor: pointer;
+  transition: all .15s;
+}
+.logout-btn svg { width: 15px; height: 15px; }
+.logout-btn:hover { border-color: rgba(255,80,80,.4); color: #ff6b6b; }
+
 /* ── QR TYPE TOGGLE ── */
 .qr-type-tabs {
   display: flex; gap: 8px; margin-bottom: 24px;

@@ -1,15 +1,8 @@
-const { getAllQRs } = require('./_lib/store');
+// api/me.js — returns current admin info if authenticated
 const { requireAuth } = require('./_lib/auth');
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method Not Allowed' });
   if (!requireAuth(req, res)) return;
-  try {
-    const list = await getAllQRs();
-    return res.status(200).json(list);
-  } catch (e) {
-    return res.status(500).json({ error: 'Server error' });
-  }
+  return res.status(200).json({ username: req.admin.sub });
 };
-
-

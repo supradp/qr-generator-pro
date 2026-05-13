@@ -1,7 +1,9 @@
 // api/folders/[folderId].js
 const { deleteFolder, getAllFolders } = require('../_lib/store');
+const { requireAuth } = require('../_lib/auth');
 
 module.exports = async (req, res) => {
+  if (!requireAuth(req, res)) return;
   const { folderId } = req.query;
 
   if (req.method === 'DELETE') {

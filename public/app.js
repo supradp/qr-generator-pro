@@ -77,7 +77,27 @@ const toast = (msg) => {
 
 function lucideInit(){ if (window.lucide) window.lucide.createIcons(); }
 
-document.addEventListener('DOMContentLoaded', () => {
+// ── Global 401 interceptor ──────────────────────────────────────
+const _origFetch = window.fetch.bind(window);
+window.fetch = async (...args) => {
+  const res = await _origFetch(...args);
+  if (res.status === 401 && !args[0]?.toString().includes('/api/me') && !args[0]?.toString().includes('/api/login')) {
+    window.location.href = '/login.html';
+  }
+  return res;
+};
+
+// ── Auth check — redirect to login if not authenticated ─────────
+async function checkAuth() {
+  try {
+    const res = await fetch('/api/me');
+    if (res.status === 401) { window.location.href = '/login.html'; return false; }
+  } catch { window.location.href = '/login.html'; return false; }
+  return true;
+}
+
+document.addEventListener('DOMContentLoaded', async () => {
+  if (!await checkAuth()) return;
   lucideInit();
   if (window.Chart) {
     Chart.defaults.color = '#666666';
@@ -85,6 +105,12 @@ document.addEventListener('DOMContentLoaded', () => {
     Chart.defaults.font.family = "'JetBrains Mono', monospace";
     Chart.defaults.font.size = 10;
   }
+
+  // Logout
+  $('#logoutBtn')?.addEventListener('click', async () => {
+    await fetch('/api/logout', { method: 'POST' });
+    window.location.href = '/login.html';
+  });
 
   // QR type toggle
   $all('.qr-type-tab').forEach(btn => {

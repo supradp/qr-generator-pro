@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="uk">
+<head>
+  <meta charset="utf-8"/>
+  <meta name="viewport" content="width=device-width,initial-scale=1"/>
+  <title>MOTORNI — Вхід</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=JetBrains+Mono:wght@300;400&family=DM+Sans:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    :root {
+      --bg:      #09090B;
+      --surface: #111115;
+      --border:  rgba(255,255,255,0.07);
+      --accent:  #00FF88;
+      --text:    #E2E2E2;
+      --muted:   #666;
+    }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: var(--bg); color: var(--text);
+      min-height: 100dvh;
+      display: flex; align-items: center; justify-content: center;
+      overflow: hidden;
+    }
+
+    /* dot grid */
+    body::before {
+      content: '';
+      position: fixed; inset: 0; pointer-events: none; z-index: 0;
+      background-image: radial-gradient(circle, rgba(255,255,255,.035) 1px, transparent 1px);
+      background-size: 28px 28px;
+    }
+
+    /* glow blob */
+    body::after {
+      content: '';
+      position: fixed; top: -200px; left: 50%; transform: translateX(-50%);
+      width: 600px; height: 600px; border-radius: 50%;
+      background: radial-gradient(circle, rgba(0,255,136,.07) 0%, transparent 70%);
+      pointer-events: none; z-index: 0;
+    }
+
+    .card {
+      position: relative; z-index: 1;
+      width: 100%; max-width: 420px; margin: 24px;
+      padding: 40px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+    }
+
+    /* Brand */
+    .brand {
+      display: flex; align-items: center; gap: 10px;
+      margin-bottom: 36px;
+    }
+    .brand-sq {
+      width: 18px; height: 18px;
+      border: 2px solid rgba(0,255,136,.6);
+      border-radius: 3px; position: relative; flex-shrink: 0;
+    }
+    .brand-sq::after {
+      content: ''; position: absolute; inset: 3px;
+      background: rgba(0,255,136,.6); border-radius: 1px;
+    }
+    .brand-name {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem; letter-spacing: 6px;
+      color: rgba(0,255,136,.5);
+    }
+
+    /* Heading */
+    .eyebrow {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .55rem; letter-spacing: 4px; color: var(--accent);
+      margin-bottom: 10px;
+    }
+    h1 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.8rem; letter-spacing: 6px;
+      color: var(--text); line-height: 1; margin-bottom: 32px;
+    }
+
+    /* Form */
+    .field { margin-bottom: 18px; }
+    .field label {
+      display: block;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .55rem; letter-spacing: 3px; color: var(--muted);
+      margin-bottom: 8px;
+    }
+    .field input {
+      width: 100%; padding: 12px 14px;
+      background: rgba(255,255,255,.04);
+      border: 1px solid var(--border);
+      border-radius: 8px; color: var(--text);
+      font-family: 'DM Sans', sans-serif; font-size: .95rem;
+      outline: none; transition: border-color .15s;
+    }
+    .field input:focus { border-color: rgba(0,255,136,.4); }
+    .field input::placeholder { color: var(--muted); }
+
+    /* Error */
+    .err-msg {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .62rem; color: #ff6b6b;
+      letter-spacing: 1px; margin-bottom: 16px;
+      min-height: 18px;
+    }
+
+    /* Submit */
+    .submit-btn {
+      width: 100%; padding: 14px;
+      background: var(--accent); border: none;
+      border-radius: 8px; color: #09090B;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem; letter-spacing: 4px;
+      cursor: pointer; transition: opacity .15s, transform .1s;
+    }
+    .submit-btn:hover { opacity: .88; }
+    .submit-btn:active { transform: scale(.98); }
+    .submit-btn:disabled { opacity: .45; cursor: not-allowed; }
+
+    /* Spinner inside button */
+    .submit-btn.loading::after {
+      content: ''; display: inline-block;
+      width: 14px; height: 14px; margin-left: 10px;
+      border: 2px solid #09090B; border-top-color: transparent;
+      border-radius: 50%;
+      animation: spin .6s linear infinite;
+      vertical-align: middle;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="brand">
+      <span class="brand-sq"></span>
+      <span class="brand-name">MOTORNI</span>
+    </div>
+    <p class="eyebrow">ADMIN PANEL</p>
+    <h1>ВХІД</h1>
+
+    <form id="loginForm" autocomplete="on">
+      <div class="field">
+        <label for="username">ЛОГІН</label>
+        <input id="username" name="username" type="text" placeholder="admin" autocomplete="username" required>
+      </div>
+      <div class="field">
+        <label for="password">ПАРОЛЬ</label>
+        <input id="password" name="password" type="password" placeholder="••••••••" autocomplete="current-password" required>
+      </div>
+      <p class="err-msg" id="errMsg"></p>
+      <button class="submit-btn" type="submit" id="submitBtn">УВІЙТИ</button>
+    </form>
+  </div>
+
+  <script>
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const btn = document.getElementById('submitBtn');
+      const errEl = document.getElementById('errMsg');
+      errEl.textContent = '';
+      btn.disabled = true;
+      btn.classList.add('loading');
+      btn.textContent = 'ВХОДЖУ';
+
+      try {
+        const res = await fetch('/api/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            username: document.getElementById('username').value.trim(),
+            password: document.getElementById('password').value,
+          }),
+        });
+        const data = await res.json();
+        if (!res.ok) { errEl.textContent = data.error || 'Помилка входу'; return; }
+        window.location.href = '/';
+      } catch {
+        errEl.textContent = 'Мережева помилка. Спробуйте ще раз.';
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+        btn.textContent = 'УВІЙТИ';
+      }
+    });
+  </script>
+</body>
+</html>

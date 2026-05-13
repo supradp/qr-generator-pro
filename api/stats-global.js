@@ -1,7 +1,9 @@
 const { getGlobalStats } = require('./_lib/store');
+const { requireAuth } = require('./_lib/auth');
 
 module.exports = async (req, res) => {
   if (req.method !== 'GET') return res.status(405).json({ error: 'Method Not Allowed' });
+  if (!requireAuth(req, res)) return;
   const days = Number(req.query.days || 30);
   const tzOffset = Number(req.query.tz || 0);
   const data = await getGlobalStats({ days, tzOffset });

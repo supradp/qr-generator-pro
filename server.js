@@ -5,9 +5,17 @@ const bodyParser = require('body-parser');
 const cors = require('cors');
 const { createQR, getAllQRs, getQR, deleteQR, updateQR, addScan, getStats, getGlobalStats, createFolder, getAllFolders, deleteFolder } = require('./api/_lib/store');
 const { initDB } = require('./api/_lib/db');
+const { checkCredentials, signToken, setAuthCookie, clearAuthCookie, parseCookies, verifyToken, COOKIE_NAME } = require('./api/_lib/auth');
 const QRCode = require('qrcode');
 const { v4: uuidv4 } = require('uuid');
 const https = require('https');
+
+// ── Auth helpers for Express ──────────────────────────────────
+function authMiddleware(req, res, next) {
+  const token = parseCookies(req)[COOKIE_NAME];
+  if (!verifyToken(token)) return res.status(401).json({ error: 'Unauthorized' });
+  next();
+}
 
 async function fetchJSON(url) {
   if (typeof fetch !== 'undefined') {
@@ -55,6 +63,34 @@ app.use(bodyParser.json());
 app.use(express.static(path.join(__dirname, 'public')));
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
+// ── Auth routes (public) ──────────────────────────────────────
+app.post('/api/login', async (req, res) => {
+  const { username, password } = req.body || {};
+  if (!username || !password) return res.status(400).json({ error: 'Введіть логін та пароль' });
+  if (!checkCredentials(username, password)) {
+    await new Promise(r => setTimeout(r, 400));
+    return res.status(401).json({ error: 'Невірний логін або пароль' });
+  }
+  const token = signToken({ sub: username });
+  setAuthCookie(res, token);
+  return res.status(200).json({ ok: true });
+});
+
+app.post('/api/logout', (req, res) => {
+  clearAuthCookie(res);
+  return res.status(200).json({ ok: true });
+});
+
+app.get('/api/me', (req, res) => {
+  const token = parseCookies(req)[COOKIE_NAME];
+  const payload = verifyToken(token);
+  if (!payload) return res.status(401).json({ error: 'Unauthorized' });
+  return res.status(200).json({ username: payload.sub });
+});
+
+// ── Protected API routes ──────────────────────────────────────
+app.use('/api', authMiddleware);
+
 app.get('/api/folders', async (req, res) => {
   res.json(await getAllFolders());
 });
@@ -75,15 +111,32 @@ app.delete('/api/folders/:folderId', async (req, res) => {
 });
 
 app.post('/api/generate', async (req, res) => {
-  const { url, tracking = true, folder_id = null } = req.body || {};
+  const { url, type = 'url', tracking = true, folder_id = null, page_config = null } = req.body || {};
+  const proto = req.protocol;
+  const host  = req.get('host');
+
+  if (type === 'page') {
+    if (!page_config || !Array.isArray(page_config.links) || !page_config.links.length) {
+      return res.status(400).json({ error: 'Додайте хоча б одне посилання' });
+    }
+    const id = uuidv4();
+    const redirectUrl = `${proto}://${host}/redirect/${id}`;
+    const [qr_image_png, qr_image_svg] = await Promise.all([
+      QRCode.toDataURL(redirectUrl, { errorCorrectionLevel: 'H', width: 1024, margin: 2 }),
+      QRCode.toString(redirectUrl, { type: 'svg', errorCorrectionLevel: 'H', width: 1024, margin: 2 }),
+    ]);
+    const record = await createQR({ id, original_url: page_config.title || 'Сторінка посилань', type: 'page', page_config, qr_image_png, qr_image_svg, tracking, folder_id: folder_id || null });
+    return res.status(201).json({ ...record, short_url: redirectUrl });
+  }
+
   try { new URL(url); } catch {
     return res.status(400).json({ error: 'Невірний URL' });
   }
   const id = uuidv4();
-  const redirectUrl = `${req.protocol}://${req.get('host')}/redirect/${id}`;
+  const redirectUrl = `${proto}://${host}/redirect/${id}`;
   const qr_image_png = await QRCode.toDataURL(redirectUrl, { errorCorrectionLevel: 'H', width: 1024, margin: 2 });
   const qr_image_svg = await QRCode.toString(redirectUrl, { type: 'svg', errorCorrectionLevel: 'H', width: 1024, margin: 2 });
-  const record = await createQR({ id, original_url: url, qr_image_png, qr_image_svg, tracking, folder_id: folder_id || null });
+  const record = await createQR({ id, original_url: url, type: 'url', qr_image_png, qr_image_svg, tracking, folder_id: folder_id || null });
   res.status(201).json({ ...record, short_url: redirectUrl });
 });
 

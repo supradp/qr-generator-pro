@@ -1,7 +1,9 @@
 // api/folders.js
 const { getAllFolders, createFolder } = require('./_lib/store');
+const { requireAuth } = require('./_lib/auth');
 
 module.exports = async (req, res) => {
+  if (!requireAuth(req, res)) return;
   if (req.method === 'GET') {
     const folders = await getAllFolders();
     return res.json(folders);

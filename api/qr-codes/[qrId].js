@@ -1,7 +1,9 @@
 // api/qr-codes/[qrId].js
 const { deleteQR, getQR, updateQR } = require('../_lib/store');
+const { requireAuth } = require('../_lib/auth');
 
 module.exports = async (req, res) => {
+  if (!requireAuth(req, res)) return;
   const { qrId } = req.query;
 
   if (req.method === 'DELETE') {

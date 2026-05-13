@@ -2,9 +2,11 @@
 const QRCode = require('qrcode');
 const { v4: uuidv4 } = require('uuid');
 const { createQR } = require('./_lib/store');
+const { requireAuth } = require('./_lib/auth');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return res.status(405).json({ error: 'Method Not Allowed' });
+  if (!requireAuth(req, res)) return;
 
   try {
     const { url, type = 'url', tracking = true, folder_id = null, page_config = null } = req.body || {};
