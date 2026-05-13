@@ -81,7 +81,7 @@ function lucideInit(){ if (window.lucide) window.lucide.createIcons(); }
 const _origFetch = window.fetch.bind(window);
 window.fetch = async (...args) => {
   const res = await _origFetch(...args);
-  if (res.status === 401 && !args[0]?.toString().includes('/api/me') && !args[0]?.toString().includes('/api/login')) {
+  if (res.status === 401 && !args[0]?.toString().includes('/api/auth')) {
     window.location.href = '/login.html';
   }
   return res;
@@ -90,7 +90,7 @@ window.fetch = async (...args) => {
 // ── Auth check — redirect to login if not authenticated ─────────
 async function checkAuth() {
   try {
-    const res = await fetch('/api/me');
+    const res = await fetch('/api/auth');
     if (res.status === 401) { window.location.href = '/login.html'; return false; }
   } catch { window.location.href = '/login.html'; return false; }
   return true;
@@ -108,7 +108,7 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   // Logout
   $('#logoutBtn')?.addEventListener('click', async () => {
-    await fetch('/api/logout', { method: 'POST' });
+    await fetch('/api/auth', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ action: 'logout' }) });
     window.location.href = '/login.html';
   });
 

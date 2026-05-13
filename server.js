@@ -64,28 +64,30 @@ app.use(express.static(path.join(__dirname, 'public')));
 app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // ── Auth routes (public) ──────────────────────────────────────
-app.post('/api/login', async (req, res) => {
-  const { username, password } = req.body || {};
-  if (!username || !password) return res.status(400).json({ error: 'Введіть логін та пароль' });
-  if (!checkCredentials(username, password)) {
-    await new Promise(r => setTimeout(r, 400));
-    return res.status(401).json({ error: 'Невірний логін або пароль' });
-  }
-  const token = signToken({ sub: username });
-  setAuthCookie(res, token);
-  return res.status(200).json({ ok: true });
-});
-
-app.post('/api/logout', (req, res) => {
-  clearAuthCookie(res);
-  return res.status(200).json({ ok: true });
-});
-
-app.get('/api/me', (req, res) => {
+app.get('/api/auth', (req, res) => {
   const token = parseCookies(req)[COOKIE_NAME];
   const payload = verifyToken(token);
   if (!payload) return res.status(401).json({ error: 'Unauthorized' });
   return res.status(200).json({ username: payload.sub });
+});
+
+app.post('/api/auth', async (req, res) => {
+  const { action, username, password } = req.body || {};
+  if (action === 'logout') {
+    clearAuthCookie(res);
+    return res.status(200).json({ ok: true });
+  }
+  if (action === 'login') {
+    if (!username || !password) return res.status(400).json({ error: 'Введіть логін та пароль' });
+    if (!checkCredentials(username, password)) {
+      await new Promise(r => setTimeout(r, 400));
+      return res.status(401).json({ error: 'Невірний логін або пароль' });
+    }
+    const token = signToken({ sub: username });
+    setAuthCookie(res, token);
+    return res.status(200).json({ ok: true });
+  }
+  return res.status(400).json({ error: 'Unknown action' });
 });
 
 // ── Protected API routes ──────────────────────────────────────
