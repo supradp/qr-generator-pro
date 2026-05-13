@@ -73,15 +73,64 @@
         <h2 class="section-title">СТВОРИТИ QR-КОД</h2>
       </div>
       <div class="create-card">
+        <!-- QR type selector -->
+        <div class="qr-type-tabs">
+          <button type="button" class="qr-type-tab active" data-type="url">
+            <i data-lucide="link"></i> URL-РЕДИРЕКТ
+          </button>
+          <button type="button" class="qr-type-tab" data-type="page">
+            <i data-lucide="layout"></i> СТОРІНКА ПОСИЛАНЬ
+          </button>
+        </div>
+
         <form id="generateForm" class="create-form">
-          <div class="field">
-            <label class="field-label" for="url">ЦІЛЬОВИЙ URL</label>
-            <div class="input-wrap">
-              <input id="url" name="url" type="url" placeholder="https://example.com" required class="field-input" autocomplete="url">
-              <button type="button" class="input-clear hidden" id="urlClear" title="Очистити">×</button>
+          <input type="hidden" id="qrType" value="url">
+
+          <!-- URL mode -->
+          <div id="urlTypeSection">
+            <div class="field">
+              <label class="field-label" for="url">ЦІЛЬОВИЙ URL</label>
+              <div class="input-wrap">
+                <input id="url" name="url" type="url" placeholder="https://example.com" required class="field-input" autocomplete="url">
+                <button type="button" class="input-clear hidden" id="urlClear" title="Очистити">×</button>
+              </div>
+              <span class="field-err hidden" id="urlError"></span>
             </div>
-            <span class="field-err hidden" id="urlError"></span>
           </div>
+
+          <!-- Page builder mode -->
+          <div id="pageTypeSection" class="hidden">
+            <div class="field">
+              <label class="field-label" for="pageTitle">НАЗВА КОМПАНІЇ / БРЕНДУ <span class="field-req">*</span></label>
+              <input id="pageTitle" type="text" class="field-input" placeholder="Моя компанія" maxlength="60">
+            </div>
+            <div class="field">
+              <label class="field-label" for="pageSubtitle">ПІДЗАГОЛОВОК</label>
+              <input id="pageSubtitle" type="text" class="field-input" placeholder="Слідкуйте за нами" maxlength="100">
+            </div>
+            <div class="field">
+              <label class="field-label" for="pageLogoUrl">ПОСИЛАННЯ НА ЛОГОТИП</label>
+              <input id="pageLogoUrl" type="url" class="field-input" placeholder="https://example.com/logo.png">
+            </div>
+            <div class="field-row">
+              <div class="field">
+                <label class="field-label" for="pageBgColor">ФОНОВИЙ КОЛІР</label>
+                <input id="pageBgColor" type="color" class="field-input field-color" value="#09090B">
+              </div>
+              <div class="field">
+                <label class="field-label" for="pageAccentColor">КОЛІР АКЦЕНТУ</label>
+                <input id="pageAccentColor" type="color" class="field-input field-color" value="#00FF88">
+              </div>
+            </div>
+            <div class="field">
+              <label class="field-label">ПОСИЛАННЯ <span class="field-req">*</span> <span class="field-hint">(мін. 1)</span></label>
+              <div id="pageLinks" class="page-links-list"></div>
+              <button type="button" id="addPageLink" class="ghost-btn" style="margin-top:10px">
+                <i data-lucide="plus"></i> ДОДАТИ ПОСИЛАННЯ
+              </button>
+            </div>
+          </div>
+
           <div class="track-row">
             <label class="toggle-wrap">
               <input type="checkbox" id="tracking" checked class="toggle-input">

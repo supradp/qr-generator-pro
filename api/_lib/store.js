@@ -103,10 +103,16 @@ function buildBreakdowns(scans, tzOffsetMinutes = 0) {
 // ────────────────────────────────────────────────────────────
 function rowToQR(r) {
   if (!r) return null;
+  let page_config = r.page_config;
+  if (typeof page_config === 'string') {
+    try { page_config = JSON.parse(page_config); } catch { page_config = null; }
+  }
   return {
     ...r,
     scan_count: Number(r.scan_count || 0),
     created_at: r.created_at instanceof Date ? r.created_at.toISOString() : r.created_at,
+    type: r.type || 'url',
+    page_config: page_config || null,
   };
 }
 
@@ -145,18 +151,19 @@ async function deleteFolder(id) {
 // ────────────────────────────────────────────────────────────
 //  CRUD для QR-кодов
 // ────────────────────────────────────────────────────────────
-async function createQR({ id = uuidv4(), original_url, qr_image, qr_image_png, qr_image_svg, tracking = true, folder_id = null }) {
+async function createQR({ id = uuidv4(), original_url, qr_image, qr_image_png, qr_image_svg, tracking = true, folder_id = null, type = 'url', page_config = null }) {
   await initDB();
   const pool = getPool();
   const created_at = new Date().toISOString();
   const img    = qr_image || qr_image_png || null;
   const imgPng = qr_image_png || qr_image || null;
+  const pgCfg  = page_config ? JSON.stringify(page_config) : null;
   await pool.query(
-    `INSERT INTO qr_codes (id, original_url, created_at, scan_count, qr_image, qr_image_png, qr_image_svg, tracking, folder_id)
-     VALUES ($1, $2, $3, 0, $4, $5, $6, $7, $8)`,
-    [id, original_url, created_at, img, imgPng, qr_image_svg || null, tracking, folder_id || null],
+    `INSERT INTO qr_codes (id, original_url, created_at, scan_count, qr_image, qr_image_png, qr_image_svg, tracking, folder_id, type, page_config)
+     VALUES ($1, $2, $3, 0, $4, $5, $6, $7, $8, $9, $10)`,
+    [id, original_url, created_at, img, imgPng, qr_image_svg || null, tracking, folder_id || null, type, pgCfg],
   );
-  return { id, original_url, created_at, scan_count: 0, qr_image: img, qr_image_png: imgPng, qr_image_svg: qr_image_svg || null, tracking, folder_id: folder_id || null };
+  return { id, original_url, created_at, scan_count: 0, qr_image: img, qr_image_png: imgPng, qr_image_svg: qr_image_svg || null, tracking, folder_id: folder_id || null, type, page_config };
 }
 
 async function getQR(id) {

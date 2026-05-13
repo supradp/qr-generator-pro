@@ -738,3 +738,60 @@ td.actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 }
 .folder-move-sel:hover, .folder-move-sel:focus { border-color: var(--accent-glow); outline: none; color: var(--text); }
 .folder-move-sel option { background: var(--surface2); color: var(--text); }
+
+/* ── QR TYPE TOGGLE ── */
+.qr-type-tabs {
+  display: flex; gap: 8px; margin-bottom: 24px;
+}
+.qr-type-tab {
+  flex: 1; display: flex; align-items: center; justify-content: center; gap: 8px;
+  padding: 11px 16px;
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; color: var(--muted);
+  font-family: 'JetBrains Mono', monospace; font-size: 0.68rem; letter-spacing: 2px;
+  cursor: pointer; transition: all 0.15s;
+}
+.qr-type-tab svg { width: 15px; height: 15px; }
+.qr-type-tab:hover { border-color: rgba(255,255,255,0.18); color: var(--text); }
+.qr-type-tab.active {
+  background: var(--accent-dim); border-color: var(--accent-glow);
+  color: var(--accent);
+}
+
+/* ── PAGE BUILDER ── */
+.field-req { color: var(--accent); }
+.field-hint { font-size: 0.6rem; color: var(--muted); letter-spacing: 1px; margin-left: 4px; }
+.field-row { display: flex; gap: 12px; }
+.field-row .field { flex: 1; }
+.field-color {
+  padding: 4px 6px; height: 42px;
+  cursor: pointer;
+}
+.page-links-list {
+  display: flex; flex-direction: column; gap: 10px; margin-top: 4px;
+}
+.page-link-item {
+  background: var(--surface2); border: 1px solid var(--border);
+  border-radius: 8px; padding: 12px;
+  display: flex; flex-direction: column; gap: 8px;
+}
+.page-link-top {
+  display: flex; align-items: center; gap: 8px;
+}
+.page-link-top .field-select { flex: 1; }
+.page-link-del {
+  flex-shrink: 0; width: 32px; height: 32px;
+  display: flex; align-items: center; justify-content: center;
+  background: transparent; border: 1px solid rgba(255,60,60,0.25);
+  border-radius: 6px; color: rgba(255,100,100,0.7);
+  cursor: pointer; transition: all 0.15s; padding: 0;
+}
+.page-link-del svg { width: 14px; height: 14px; }
+.page-link-del:hover { border-color: rgba(255,60,60,0.5); color: #ff6b6b; background: rgba(255,60,60,0.07); }
+.page-type-badge {
+  display: inline-flex; align-items: center; gap: 5px;
+  font-size: 0.62rem; letter-spacing: 1.5px;
+  color: #60a5fa; background: rgba(96,165,250,0.1);
+  border: 1px solid rgba(96,165,250,0.25);
+  border-radius: 12px; padding: 2px 8px;
+}

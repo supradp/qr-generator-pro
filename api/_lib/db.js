@@ -59,9 +59,15 @@ async function initDB() {
       CREATE INDEX IF NOT EXISTS idx_scans_scanned_at ON scans(scanned_at);
     `);
 
-    // Migrate existing DB: add folder_id if not present
+    // Migrate existing DB: add missing columns
     await p.query(`
       ALTER TABLE qr_codes ADD COLUMN IF NOT EXISTS folder_id TEXT REFERENCES folders(id) ON DELETE SET NULL;
+    `).catch(() => {});
+    await p.query(`
+      ALTER TABLE qr_codes ADD COLUMN IF NOT EXISTS type TEXT NOT NULL DEFAULT 'url';
+    `).catch(() => {});
+    await p.query(`
+      ALTER TABLE qr_codes ADD COLUMN IF NOT EXISTS page_config JSONB;
     `).catch(() => {});
   })();
   return initPromise;

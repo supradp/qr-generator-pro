@@ -2,6 +2,68 @@
 const $ = (sel) => document.querySelector(sel);
 const $all = (sel) => Array.from(document.querySelectorAll(sel));
 
+// ── Page builder constants ──────────────────────────────────────
+const PLATFORM_LABELS = {
+  instagram: 'Instagram', tiktok: 'TikTok', youtube: 'YouTube',
+  telegram: 'Telegram',   whatsapp: 'WhatsApp', facebook: 'Facebook',
+  twitter: 'Twitter / X', linkedin: 'LinkedIn', viber: 'Viber',
+  github: 'GitHub',       pinterest: 'Pinterest', website: 'Вебсайт',
+  custom: 'Інше…',
+};
+let pageLinkCounter = 0;
+
+function buildPlatformOptions(selected = 'instagram') {
+  return Object.entries(PLATFORM_LABELS)
+    .map(([v, l]) => `<option value="${v}"${v === selected ? ' selected' : ''}>${l}</option>`)
+    .join('');
+}
+
+function addPageLinkItem(platform = 'instagram') {
+  const container = $('#pageLinks');
+  if (!container) return;
+  const idx = pageLinkCounter++;
+  const item = document.createElement('div');
+  item.className = 'page-link-item';
+  item.dataset.idx = idx;
+  item.innerHTML = `
+    <div class="page-link-top">
+      <select class="field-input field-select platform-sel" style="font-size:.78rem">
+        ${buildPlatformOptions(platform)}
+      </select>
+      <button type="button" class="page-link-del" title="Видалити"><i data-lucide="trash-2"></i></button>
+    </div>
+    <input type="text"  class="field-input link-label-inp" placeholder="Мітка кнопки" value="${escapeHtml(PLATFORM_LABELS[platform] || '')}">
+    <input type="url"   class="field-input link-url-inp"   placeholder="https://…">
+  `;
+  const sel = item.querySelector('.platform-sel');
+  const labelInp = item.querySelector('.link-label-inp');
+  sel?.addEventListener('change', () => {
+    if (!labelInp.dataset.edited) labelInp.value = PLATFORM_LABELS[sel.value] || '';
+  });
+  labelInp?.addEventListener('input', () => { labelInp.dataset.edited = '1'; });
+  item.querySelector('.page-link-del')?.addEventListener('click', () => item.remove());
+  container.appendChild(item);
+  lucideInit();
+}
+
+function collectPageConfig() {
+  const links = [];
+  $all('#pageLinks .page-link-item').forEach(item => {
+    const platform = item.querySelector('.platform-sel')?.value || 'custom';
+    const label    = item.querySelector('.link-label-inp')?.value.trim() || '';
+    const url      = item.querySelector('.link-url-inp')?.value.trim() || '';
+    if (url) links.push({ platform, label, url });
+  });
+  return {
+    title:        $('#pageTitle')?.value.trim()    || '',
+    subtitle:     $('#pageSubtitle')?.value.trim() || '',
+    logo_url:     $('#pageLogoUrl')?.value.trim()  || '',
+    bg_color:     $('#pageBgColor')?.value         || '#09090B',
+    accent_color: $('#pageAccentColor')?.value     || '#00FF88',
+    links,
+  };
+}
+
 // Folder state
 let allFolders = [];
 let currentFolderId = ''; // '' = show all
@@ -23,6 +85,26 @@ document.addEventListener('DOMContentLoaded', () => {
     Chart.defaults.font.family = "'JetBrains Mono', monospace";
     Chart.defaults.font.size = 10;
   }
+
+  // QR type toggle
+  $all('.qr-type-tab').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const type = btn.getAttribute('data-type');
+      $('#qrType').value = type;
+      $all('.qr-type-tab').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+      const isPage = type === 'page';
+      $('#urlTypeSection')?.classList.toggle('hidden', isPage);
+      $('#pageTypeSection')?.classList.toggle('hidden', !isPage);
+      const urlInput = $('#url');
+      if (urlInput) urlInput.required = !isPage;
+      if (isPage && !$('#pageLinks .page-link-item')) addPageLinkItem();
+    });
+  });
+
+  // Page builder: add first link item on init (hidden until page mode)
+  addPageLinkItem('instagram');
+  $('#addPageLink')?.addEventListener('click', () => addPageLinkItem());
 
   // Авто-фокус на поле URL
   setTimeout(() => $('#url')?.focus(), 150);
@@ -86,21 +168,31 @@ document.addEventListener('DOMContentLoaded', () => {
   // Генерація
   $('#generateForm').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const url = $('#url').value.trim();
+    const type = $('#qrType').value || 'url';
     const tracking = $('#tracking').checked;
     const folder_id = $('#qrFolder')?.value || null;
 
-    try { new URL(url); } catch {
-      if (urlError) { urlError.textContent = 'Введіть коректний URL (починається з https://)'; urlError.classList.remove('hidden'); }
-      urlInput?.focus();
-      return;
+    let body;
+    if (type === 'page') {
+      const cfg = collectPageConfig();
+      if (!cfg.title) { toast('Введіть назву компанії'); $('#pageTitle')?.focus(); return; }
+      if (!cfg.links.length) { toast('Додайте хоча б одне посилання з URL'); return; }
+      body = { type: 'page', page_config: cfg, tracking, folder_id: folder_id || null };
+    } else {
+      const url = $('#url').value.trim();
+      try { new URL(url); } catch {
+        if (urlError) { urlError.textContent = 'Введіть коректний URL (починається з https://)'; urlError.classList.remove('hidden'); }
+        urlInput?.focus();
+        return;
+      }
+      body = { url, tracking, folder_id: folder_id || null };
     }
 
     const btn = e.submitter; const old = btn.innerHTML; btn.disabled = true; btn.innerHTML = 'Створення…';
     try {
       const res = await fetch('/api/generate', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ url, tracking, folder_id: folder_id || null }),
+        body: JSON.stringify(body),
       });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error || 'Помилка');
@@ -108,18 +200,15 @@ document.addEventListener('DOMContentLoaded', () => {
       $('#qrImage').src = data.qr_image_png || data.qr_image;
       $('#shortUrl').href = data.short_url;
       $('#shortUrl').textContent = data.short_url;
-      // $('#downloadPng').href = data.qr_image_png || data.qr_image; // PNG вимкнено
-      // SVG як Blob URL
       if (data.qr_image_svg) {
         const svgBlob = new Blob([data.qr_image_svg], { type: 'image/svg+xml' });
-        const svgUrl = URL.createObjectURL(svgBlob);
-        $('#downloadSvg').href = svgUrl;
+        $('#downloadSvg').href = URL.createObjectURL(svgBlob);
       } else {
         $('#downloadSvg').removeAttribute('href');
       }
       $('#result').classList.remove('hidden');
       setTimeout(() => $('#result').scrollIntoView({ behavior: 'smooth', block: 'nearest' }), 60);
-      toast('QR-код створено');
+      toast(type === 'page' ? 'Сторінку посилань створено' : 'QR-код створено');
       loadList();
     } catch (err) { toast(err.message); }
     finally { btn.disabled = false; btn.innerHTML = old; }
@@ -331,9 +420,14 @@ async function loadList(){
         `<option value="${f.id}" ${x.folder_id === f.id ? 'selected' : ''}>${escapeHtml(f.name)}</option>`
       ).join('');
 
+      const isPage = x.type === 'page';
+      const urlCell = isPage
+        ? `<span class="page-type-badge"><i data-lucide="layout" style="width:11px;height:11px"></i> СТОРІНКА</span> ${escapeHtml(x.original_url)}`
+        : `<a href="${x.original_url}" target="_blank" title="${escapeHtml(x.original_url)}">${escapeHtml(x.original_url)}</a>`;
+
       return `<tr>
         <td><code>${x.id.slice(0,8)}</code></td>
-        <td class="url-cell"><a href="${x.original_url}" target="_blank" title="${escapeHtml(x.original_url)}">${escapeHtml(x.original_url)}</a></td>
+        <td class="url-cell">${urlCell}</td>
         <td>${x.scan_count || 0}</td>
         <td>${uniques}</td>
         <td class="folder-cell">
@@ -346,7 +440,7 @@ async function loadList(){
         <td><span class="status ${String(x.tracking)!=='false'?'on':''}">${String(x.tracking)!=='false'?'Відстежується':'Без трекінгу'}</span></td>
         <td class="actions">
           <button class="btn btn-ghost" data-act="stats" data-id="${x.id}"><i data-lucide="bar-chart-3"></i> Статистика</button>
-          <a class="btn btn-ghost" href="/redirect/${x.id}" target="_blank"><i data-lucide="link"></i> Відкрити</a>
+          <a class="btn btn-ghost" href="/redirect/${x.id}" target="_blank"><i data-lucide="${isPage?'layout':'link'}"></i> ${isPage?'Переглянути':'Відкрити'}</a>
           ${x.qr_image_svg ? `<a class="btn btn-ghost" href="${svgHref}" download="qr-${x.id}.svg"><i data-lucide="download"></i> SVG</a>` : ''}
           <button class="btn btn-ghost" data-act="delete" data-id="${x.id}"><i data-lucide="trash-2"></i> Видалити</button>
         </td>
